@@ -4,45 +4,49 @@ Active work board. Keep at most one task In Progress per dev-agent lane.
 
 ## Dev Agent 1 In Progress
 
-### Harden launcher for symlinked installs and toolchain
+### Vendor filemanager and explorer defaults
 
-Task ID: LAUNCH-01
+Task ID: PLUG-01
 Owner: Dev Agent 1
-Branch: agent/1/launch-01-hardening
+Branch: agent/1/plug-01-filemanager
 Status: In Progress
 Category: AFK
 
 ## Objective
 
-Harden the launcher for symlinked installs, the isolated toolchain, cursor
-arguments, and test overrides.
+Vendor `filemanager` 3.5.1, bind the explorer, hide noise by default, and keep
+editor focus.
 
 ## Scope
 
-- `bin/microboss`
-- `tests/smoke/test_launcher.sh`
-- `docs/architecture.md`
+- `config/plug/filemanager/`
+- `config/bindings.json`
+- `config/settings.json`
+- `config/init.lua`
+- `tests/smoke/test_filemanager.sh`
 
 ## Out of Scope
 
-- Installer, update, doctor, or plugin behavior.
+- fzf, LSP, installer, update.
 
 ## Acceptance Criteria
 
-- Works when invoked through a symlink in a temporary `PATH` directory.
-- Prepends `$MICROBOSS_DATA/tools/node_modules/.bin` to `PATH` when that
-  directory exists, without duplicating an existing entry.
-- Passes `FILE`, `+LINE:COL`, and `--` arguments through unchanged.
-- Respects `MICROBOSS_CONFIG`, `MICROBOSS_DATA`, and `MICROBOSS_CACHE`.
-- The test runs with a temporary `HOME` and asserts `~/.config/micro` is not
-  created or modified.
-- `bash -n bin/microboss` passes.
+- The vendored plugin reports version 3.5.1 and includes its `repo.json` and
+  license.
+- `F2` and `Ctrl+B` open and close the tree. If focus restoration needs a
+  wrapper, a small `init.lua` wrapper is allowed.
+- `filemanager.showdotfiles` and `filemanager.showignored` are `false`.
+- Opening the tree does not leave the cursor trapped in the tree after the
+  wrapper runs; the smoke test asserts the active pane is not the tree after
+  opening a fixture file.
+- Opening and closing the tree works in a temporary fixture.
+- The test does not read or write `~/.config/micro`.
 
 ## Verification
 
 ```sh
-bash -n bin/microboss
-bash tests/smoke/test_launcher.sh
+jq empty config/settings.json config/bindings.json
+bash tests/smoke/test_filemanager.sh
 ```
 
 ## Progress Notes

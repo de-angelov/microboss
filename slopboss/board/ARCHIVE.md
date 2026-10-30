@@ -178,3 +178,47 @@ git diff --check
   throwaway test against the upstream source.
 - Squash commit `b6d54fc` on `main`; `git merge-base --is-ancestor b6d54fc
   origin/main` exit 0.
+
+
+### Harden launcher for symlinked installs and toolchain
+
+Task ID: LAUNCH-01
+Owner: Dev Agent 1
+Branch: agent/1/launch-01-hardening
+Status: Done
+Completed: 2026-10-30
+
+## Objective
+
+Harden the launcher for symlinked installs, the isolated toolchain, cursor
+arguments, and test overrides.
+
+## Result
+
+- `bin/microboss`: prepends `$MICROBOSS_DATA/tools/node_modules/.bin` to `PATH`
+  when that directory exists, leaving an entry that is already present in place
+  and exporting `PATH` only when it changes. Applies before the `micro` lookup,
+  so the pinned toolchain wins over global tools.
+- `tests/smoke/test_launcher.sh`: fake `micro` records `PATH`; new checks cover
+  the toolchain prepend, preservation of existing entries, no duplicate entry,
+  and no `PATH` change when the toolchain directory is absent. The symlink test
+  now also invokes `microboss` by bare name through a temporary `PATH` directory.
+  All runs still use a temporary `HOME` and assert `~/.config/micro` is not
+  created or modified.
+- `docs/architecture.md`: documents symlink/bare-name resolution, the toolchain
+  `PATH` prepend, and `FILE`, `+LINE:COL`, `--` passthrough.
+
+## Verification
+
+```sh
+bash -n bin/microboss
+bash tests/smoke/test_launcher.sh
+```
+
+- `bash -n bin/microboss` exit 0.
+- `bash -n tests/smoke/*.sh` exit 0.
+- `bash tests/smoke/test_launcher.sh`: 42 passed, 0 failed (re-run on `main`
+  after the squash merge).
+- `git diff --check` exit 0.
+- Squash commit `1d052f1` on `main`; `git merge-base --is-ancestor 1d052f1
+  origin/main` exit 0.
