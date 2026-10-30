@@ -41,6 +41,13 @@ check_true() {
     fi
 }
 
+check_prefix() {
+    case $2 in
+        "$3"*) ok "$1" ;;
+        *) not_ok "$1" "expected prefix [$3], got [$2]" ;;
+    esac
+}
+
 TMP=$(mktemp -d "${TMPDIR:-/tmp}/microboss-launcher.XXXXXX")
 trap 'rm -rf "$TMP"' EXIT
 
@@ -67,6 +74,7 @@ cat > "$FAKEBIN/micro" <<'FAKE'
     printf 'env_data=%s\n' "${MICROBOSS_DATA-}"
     printf 'env_cache=%s\n' "${MICROBOSS_CACHE-}"
     printf 'env_root=%s\n' "${MICROBOSS_ROOT-}"
+    printf 'env_path=%s\n' "${PATH-}"
 } > "${MICROBOSS_TEST_LOG:?MICROBOSS_TEST_LOG is not set}"
 FAKE
 chmod +x "$FAKEBIN/micro"
@@ -151,6 +159,8 @@ check_eq "MICROBOSS_CACHE defaults under HOME" "$(log_value env_cache)" \
     "$TEST_HOME/.cache/microboss"
 check_eq "MICROBOSS_ROOT points at the distribution root" \
     "$(log_value env_root)" "$REPO_ROOT"
+check_eq "PATH is untouched when no toolchain is installed" \
+    "$(log_value env_path)" "$FAKEBIN:/usr/bin:/bin"
 
 check_true "default run does not create ~/.config/micro" \
     '[ ! -e "$TEST_HOME/.config/micro" ]'
@@ -187,6 +197,29 @@ check_eq "XDG_DATA_HOME is honoured" "$(log_value env_data)" \
     "$TMP/xdg/data/microboss"
 check_eq "XDG_CACHE_HOME is honoured" "$(log_value env_cache)" \
     "$TMP/xdg/cache/microboss"
+
+# --- Pinned toolchain on PATH -------------------------------------------------
+
+TOOLCHAIN_DATA="$TMP/toolchain-data"
+TOOLCHAIN_BIN="$TOOLCHAIN_DATA/tools/node_modules/.bin"
+mkdir -p "$TOOLCHAIN_BIN"
+run_launcher_env "$LAUNCHER" "MICROBOSS_DATA=$TOOLCHAIN_DATA" -- "tool.txt"
+TOOLCHAIN_PATH=$(log_value env_path)
+check_eq "toolchain: launcher exits 0" "$STATUS" "0"
+check_prefix "toolchain bin is prepended to PATH" "$TOOLCHAIN_PATH" \
+    "$TOOLCHAIN_BIN:"
+check_eq "toolchain: existing PATH entries are preserved" \
+    "${TOOLCHAIN_PATH#"$TOOLCHAIN_BIN:"}" "$FAKEBIN:/usr/bin:/bin"
+check_eq "toolchain: user arguments still pass through" "$(log_value arg3)" \
+    "tool.txt"
+
+# An entry that is already present is not added again.
+run_launcher_env "$LAUNCHER" \
+    "MICROBOSS_DATA=$TOOLCHAIN_DATA" \
+    "PATH=$TOOLCHAIN_BIN:$FAKEBIN:/usr/bin:/bin" \
+    -- "dup.txt"
+check_eq "existing toolchain PATH entry is not duplicated" \
+    "$(log_value env_path)" "$TOOLCHAIN_BIN:$FAKEBIN:/usr/bin:/bin"
 
 # --- POSIX sh invocation ------------------------------------------------------
 
@@ -230,6 +263,23 @@ check_eq "symlinked launcher passes arguments through" "$(log_value arg3)" \
     "linked.txt"
 check_eq "symlinked launcher resolves the distribution root" \
     "$(log_value env_root)" "$REPO_ROOT"
+
+# Invoked by bare name, the way a user runs it once the link directory is on
+# PATH, with no directory component in $0.
+: > "$LOG"
+: > "$OUT"
+: > "$ERR"
+env -u MICROBOSS_CONFIG -u MICROBOSS_DATA -u MICROBOSS_CACHE \
+    -u XDG_CONFIG_HOME -u XDG_DATA_HOME -u XDG_CACHE_HOME \
+    HOME="$TEST_HOME" PATH="$TMP/pathbin:$FAKEBIN:/usr/bin:/bin" \
+    MICROBOSS_TEST_LOG="$LOG" \
+    microboss "on-path.txt" > "$OUT" 2> "$ERR"
+STATUS=$?
+check_eq "launcher found by bare name on PATH exits 0" "$STATUS" "0"
+check_eq "bare-name launcher resolves the distribution root" \
+    "$(log_value env_root)" "$REPO_ROOT"
+check_eq "bare-name launcher passes arguments through" "$(log_value arg3)" \
+    "on-path.txt"
 
 # --- Missing micro ------------------------------------------------------------
 

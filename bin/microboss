@@ -53,6 +53,24 @@ MICROBOSS_DATA=${MICROBOSS_DATA:-${XDG_DATA_HOME:-$HOME/.local/share}/microboss}
 MICROBOSS_CACHE=${MICROBOSS_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/microboss}
 export MICROBOSS_CONFIG MICROBOSS_DATA MICROBOSS_CACHE
 
+# Put the pinned toolchain first on PATH when it is installed, so language
+# servers and other tools are found before global ones. Skip the entry when it
+# is already on PATH, which keeps repeated launches from growing PATH.
+MICROBOSS_TOOLCHAIN_BIN=$MICROBOSS_DATA/tools/node_modules/.bin
+if [ -d "$MICROBOSS_TOOLCHAIN_BIN" ]; then
+    case ":${PATH:-}:" in
+        *":$MICROBOSS_TOOLCHAIN_BIN:"*) ;;
+        *)
+            if [ -n "${PATH:-}" ]; then
+                PATH=$MICROBOSS_TOOLCHAIN_BIN:$PATH
+            else
+                PATH=$MICROBOSS_TOOLCHAIN_BIN
+            fi
+            export PATH
+            ;;
+    esac
+fi
+
 if ! command -v micro >/dev/null 2>&1; then
     die "micro not found on PATH. Install Micro $MICRO_MIN_VERSION or newer (https://micro-editor.github.io/) and try again." 127
 fi
