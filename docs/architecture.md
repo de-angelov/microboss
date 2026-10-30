@@ -31,6 +31,15 @@ All three variables are exported to Micro, so configuration can refer to them
 without hard-coding a user's home directory. They also make the launcher testable
 with a temporary `HOME`.
 
+## Vendored plugins
+
+`config/plug/` contains pinned plugin source copied from upstream. Micro loads
+each subdirectory automatically and microboss never runs implicit plugin
+updates. `filemanager` 3.5.1 is vendored with its `repo.json`, `LICENSE`, and a
+`VERSION` file. Its upstream `tree` command focuses the new tree pane, so
+`config/init.lua` installs a `postinit` wrapper that restores focus to the
+editor after the tree opens.
+
 ## Launcher
 
 `bin/microboss` is a POSIX `sh` script. It:

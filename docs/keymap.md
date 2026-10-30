@@ -15,7 +15,7 @@ shortcut does and why some VS Code shortcuts cannot be reproduced.
 | Save as | `Ctrl+Shift+S` | `Alt+S` | `Ctrl+Shift` is not distinguishable from `Ctrl` in most terminals. |
 | Command palette | `Ctrl+Shift+P` | `Ctrl+E` | Opens Micro's command mode. |
 | Quick open | `Ctrl+P` | `Ctrl+P` | Runs the fzf plugin command. Overrides Micro's `FindPrevious`. |
-| Explorer | `Ctrl+Shift+E` | `F2`, `Ctrl+B` | Toggles the file tree. Overrides Micro's `F2` Save and `Ctrl+B` shell mode. |
+| Explorer | `Ctrl+Shift+E` | `F2`, `Ctrl+B` | Toggles the file tree and returns focus to the editor. Overrides Micro's `F2` Save and `Ctrl+B` shell mode. |
 | Close editor | `Ctrl+W` | `Ctrl+Q` | Micro's `Quit` closes the current pane. There is no `CloseTab` action, and `Ctrl+W` is `NextSplit`. |
 | Close all | `Ctrl+Shift+W` | `Alt+Q` | Quits every tab and split. |
 | New tab | `Ctrl+N` | `Ctrl+T` | Micro's `AddTab` opens an empty buffer in a new tab. |
@@ -42,6 +42,14 @@ shortcut does and why some VS Code shortcuts cannot be reproduced.
 | Move line up | `Alt+Up` | `Alt+Up` | Micro default. |
 | Move line down | `Alt+Down` | `Alt+Down` | Micro default. |
 | Toggle soft wrap | `Alt+Z` | `Alt+Z` | `config/init.lua` toggles the buffer's `softwrap` setting. |
+
+## File explorer
+
+`F2` and `Ctrl+B` toggle the vendored `filemanager` tree. Dotfiles and
+VCS-ignored paths are hidden by default: `config/settings.json` sets
+`filemanager.showdotfiles` and `filemanager.showignored` to `false`. The
+upstream plugin focuses the new tree pane, so `config/init.lua` wraps its `tree`
+command and returns focus to the editor after the tree opens.
 
 ## Unavoidable VS Code differences
 
