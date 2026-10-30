@@ -36,13 +36,17 @@ with a temporary `HOME`.
 `bin/microboss` is a POSIX `sh` script. It:
 
 1. resolves its own path, following symlinks, so it works from any working
-   directory and from a link such as `~/.local/bin/microboss`;
+   directory, from a link such as `~/.local/bin/microboss`, and when invoked by
+   bare name from `PATH`;
 2. exports `MICROBOSS_ROOT` (the distribution root) and the three runtime
    directory variables;
-3. checks that `micro` is on `PATH` and fails with an actionable message when it
+3. prepends `$MICROBOSS_DATA/tools/node_modules/.bin` to `PATH` when it exists,
+   so the pinned toolchain wins over global tools; an entry that is already on
+   `PATH` is left in place instead of being duplicated;
+4. checks that `micro` is on `PATH` and fails with an actionable message when it
    is not;
-4. execs `micro -config-dir "$MICROBOSS_CONFIG" "$@"`, passing every user
-   argument through unchanged.
+5. execs `micro -config-dir "$MICROBOSS_CONFIG" "$@"`, passing every user
+   argument, including `FILE`, `+LINE:COL`, and `--`, through unchanged.
 
 The launcher does not create directories, install plugins, or modify the user's
 environment; those are installer and `doctor` responsibilities.
