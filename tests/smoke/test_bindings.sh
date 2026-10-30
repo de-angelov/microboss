@@ -224,6 +224,29 @@ check_no_key_pattern "bindings.json has no Ctrl+Tab chord" "CtrlTab"
 check_no_key_pattern "bindings.json has no Ctrl+backtick chord" 'Ctrl`'
 check_no_key_pattern "bindings.json has no Shift+Escape chord" "ShiftEscape"
 
+# --- Critical action names ---------------------------------------------------
+#
+# A bindable key is not enough: the action must exist too. `filemanager.*`
+# without the `lua:` prefix is not a Micro action, and `command:f` is not the
+# fzf plugin command. These checks guard the commands that plugin vendoring
+# will activate in a later task.
+
+check_action() {
+    local key=$1
+    local expected=$2
+    local actual
+    actual=$(jq -r --arg k "$key" '.[$k] // empty' "$BINDINGS")
+    if [ "$actual" = "$expected" ]; then
+        ok "$key runs $expected"
+    else
+        not_ok "$key runs $expected" "expected [$expected], got [$actual]"
+    fi
+}
+
+check_action F2 command:tree
+check_action CtrlB command:tree
+check_action CtrlP command:fzf
+
 # --- Documentation coverage --------------------------------------------------
 
 check_true "docs/keymap.md exists" '[ -f "$KEYMAP" ]'

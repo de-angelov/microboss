@@ -1,7 +1,7 @@
 {
-    "F2": "filemanager.toggle_tree",
-    "CtrlB": "filemanager.toggle_tree",
-    "CtrlP": "command:f",
+    "F2": "command:tree",
+    "CtrlB": "command:tree",
+    "CtrlP": "command:fzf",
     "CtrlE": "CommandMode",
     "CtrlQ": "Quit",
     "Alt-q": "QuitAll",
