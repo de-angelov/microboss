@@ -3,7 +3,7 @@
 **Status:** Draft for approval
 **Product:** `microboss`
 **Repository:** <https://github.com/de-angelov/microboss>
-**Target editor:** Micro 2.0.13+ (pin the exact version during implementation)
+**Target editor:** Micro 2.0.13 (tested baseline; 2.0.15 is current upstream and is evaluated in a separate upgrade task)
 **Primary platforms:** Linux and macOS; Windows through WSL is best-effort
 **Workflow:** slopboss board, one dev agent, OpenCode `opencode/deepseek-v4.1-flash-free`
 
@@ -103,10 +103,10 @@ splits for shells. Then:
 - `Ctrl+P` opens fuzzy file search;
 - `Ctrl+Space` requests completion;
 - `F12` goes to definition;
-- `Shift+F12` finds references;
-- `Ctrl+/` toggles a comment;
+- `Alt+R` finds references;
+- `CtrlUnderscore` (sent by `Ctrl+/` in most terminals) toggles a comment;
 - `Ctrl+S` saves;
-- `Ctrl+W` closes the current tab;
+- `Ctrl+Q` closes the current pane;
 - `Ctrl+\` splits the editor.
 
 ---
@@ -154,11 +154,17 @@ config/
 └── plug/
     ├── lsp/               # pinned and patched LSP plugin
     ├── filemanager/       # pinned file explorer
-    └── fzf/               # pinned fuzzy finder
+    ├── fzf/               # pinned fuzzy finder
+    └── detectindent/      # pinned indentation detection
 ```
 
-Plugins are vendored or installed from a lockfile with exact versions. A plugin
-update is a reviewed change, not an implicit side effect of starting the editor.
+Plugins are vendored at exact versions under `config/plug/`. Micro 2.0.13's
+plugin manager has no lockfile: `-plugin install` resolves the newest compatible
+version from a channel, and `-plugin update` updates every installed plugin.
+microboss therefore vendors plugin source, records each `VERSION`, and never
+runs implicit plugin updates. The pinned set is `lsp` 0.6.2, `filemanager` 3.5.1,
+`fzf` 1.1.1, and `detectindent` 1.1.1; `detectindent` is not a Micro built-in
+and is required for the indentation-detection default.
 
 ### 4.4 Installer and updater
 
@@ -202,38 +208,48 @@ available for CI and tests.
 
 ### 5.1 Defaults
 
-- true color and 256-color fallback;
-- mouse support where the terminal supports it;
-- line numbers and a readable status line;
-- soft wrap off for code, with a toggle;
-- persistent undo and swap files in the microboss cache;
-- auto-indent and detected indentation for existing files;
-- trim trailing whitespace on save;
-- bracketed paste;
-- clipboard through the terminal's OSC 52 support when available, with a
-  documented fallback;
-- smooth scrolling disabled by default for predictable terminal behavior.
+- true color and 256-color fallback via `TERM`/`COLORTERM`;
+- mouse support where the terminal supports it (`mouse: true`);
+- line numbers (`ruler: true`) and a readable status line (`statusline: true`);
+- soft wrap off for code (`softwrap: false`), with an `init.lua` toggle;
+- persistent undo (`saveundo: true`) and backups (`backup: true`) written under
+  `~/.cache/microboss`;
+- auto-indent (`autoindent: true`) and detected indentation via the pinned
+  `detectindent` 1.1.1 plugin, with filetype defaults from Micro's bundled
+  `ftoptions` plugin;
+- trim trailing whitespace on save (`rmtrailingws: true`);
+- terminal paste behavior from Micro's `paste`/`smartpaste` options;
+- clipboard through the terminal's OSC 52 support (`clipboard: terminal`) when
+  available, with a documented fallback;
+- keep Micro's default scroll behavior (`scrollspeed: 2`); microboss does not
+  implement smooth scrolling.
 
 ### 5.2 File explorer
 
 Use the pinned `filemanager` plugin:
 
 - `F2` and `Ctrl+B` toggle the tree;
-- `Ctrl+Shift+E` is an alternate explorer binding;
-- hidden files are shown on demand;
-- `node_modules`, `dist`, `.git`, and common build output are filtered by
-  default;
+- hidden files are hidden by default (`filemanager.showdotfiles: false`) and
+  shown on demand;
+- VCS-ignored paths are hidden by default (`filemanager.showignored: false`),
+  which covers `node_modules`, `dist`, `.git`, and common build output in
+  git-managed projects;
 - opening a directory from the explorer selects the file in the current tab;
-- the tree must not steal focus from the editor when it opens.
+- the upstream plugin focuses the tree when it opens; the microboss wrapper
+  restores editor focus after opening and the smoke test verifies it.
 
 ### 5.3 Fuzzy finder
 
-Use the pinned `fzf` plugin with a project-aware ignore list:
+Use the pinned `fzf` plugin. The plugin runs a bare `fzf` command and has no
+ignore list, so microboss exports `FZF_DEFAULT_COMMAND` in the launcher (or
+patches the plugin) to provide project-aware ignores:
 
 - `Ctrl+P` searches files;
-- `Ctrl+Shift+P` opens the Micro command palette;
+- `Ctrl+E` opens Micro's command palette (`Ctrl+Shift+P` is indistinguishable
+  from `Ctrl+P` in terminals);
 - `Ctrl+F` uses the editor's in-buffer search;
-- `Ctrl+Shift+F` runs a project-wide text search when `rg` is available;
+- `Alt+Shift+F` runs a project-wide text search when `rg` is available
+  (`Ctrl+Shift+F` is indistinguishable from `Ctrl+F` in terminals);
 - ignore `.git`, `node_modules`, `dist`, `coverage`, and lockfile noise where
   appropriate.
 
@@ -252,16 +268,17 @@ bind a shortcut to one.
 
 ### 5.5 Tabs, splits, search, and editing
 
-- `Ctrl+N` new tab; `Ctrl+W` close tab; `Ctrl+Q` quit all.
-- `Ctrl+Tab` / `Ctrl+Shift+Tab` cycle tabs.
-- `Ctrl+\` vertical split; `Ctrl+Shift+\` horizontal split.
-- `Ctrl+F` incremental search; `F3` / `Shift+F3` next/previous match.
-- `Ctrl+D` add cursor at next match; `Ctrl+U` remove cursor;
-  `Shift+Escape` clear all cursors.
-- `Shift+Alt+Up/Down` duplicate line up/down.
-- `Alt+Up/Down` move line up/down.
-- `Ctrl+/` toggle comment.
-- `Shift+Alt+F` format the buffer through LSP or Prettier.
+- `Ctrl+T` new tab; `Ctrl+Q` close the current pane; `Alt+Q` quit all.
+- `Alt+.` / `Alt+,` cycle tabs (Micro defaults).
+- `Ctrl+\` vertical split; `Alt+\` horizontal split.
+- `Ctrl+F` incremental search; `F3` next match; `Alt+P` previous match.
+- `Ctrl+D` add cursor at next match (rebind from `DuplicateLine`);
+  `Ctrl+U` remove cursor (rebind from `ToggleMacro`); `Alt+C` clear all cursors
+  (Micro default `RemoveAllMultiCursors`).
+- `Alt+Shift+D` duplicate line; `Alt+Up/Down` move line up/down.
+- `CtrlUnderscore` (sent by `Ctrl+/` in most terminals) or `Alt+/` toggles a
+  comment.
+- `Alt+F` formats the buffer through LSP or Prettier (LSP plugin default).
 - `Ctrl+Space` LSP completion.
 
 ---
@@ -275,32 +292,33 @@ binding: use Tilix, tmux, or the host terminal's own tabs and splits.
 | Action | VS Code | microboss | Notes |
 | --- | --- | --- | --- |
 | Save | `Ctrl+S` | `Ctrl+S` | Micro default. |
-| Save as | `Ctrl+Shift+S` | `Ctrl+Shift+S` | |
-| Command palette | `Ctrl+Shift+P` | `Ctrl+Shift+P` | Maps to Micro command mode. |
-| Quick open | `Ctrl+P` | `Ctrl+P` | fzf plugin. |
-| Explorer | `Ctrl+Shift+E` | `F2`, `Ctrl+B`, `Ctrl+Shift+E` | `F2` preserves existing muscle memory. |
-| Close editor | `Ctrl+W` | `Ctrl+W` | |
-| Close all | `Ctrl+Shift+W` | `Ctrl+Q` | Micro native. |
-| Next tab | `Ctrl+Tab` | `Ctrl+Tab` | |
-| Previous tab | `Ctrl+Shift+Tab` | `Ctrl+Shift+Tab` | |
-| Split editor | `Ctrl+\` | `Ctrl+\` | |
-| Find | `Ctrl+F` | `Ctrl+F` | |
-| Find next | `F3` | `F3` | |
-| Find previous | `Shift+F3` | `Shift+F3` | |
-| Go to definition | `F12` | `F12`, `Alt+D` | LSP. |
-| Find references | `Shift+F12` | `Shift+F12`, `Alt+R` | LSP. |
-| Hover | `Ctrl+K Ctrl+I` | `Alt+K` | Single Micro-friendly chord. |
-| Rename symbol | `F2` | `Ctrl+Shift+R` | `F2` is taken by the explorer. |
-| Completion | `Ctrl+Space` | `Ctrl+Space` | LSP. |
-| Format document | `Shift+Alt+F` | `Shift+Alt+F` | LSP/Prettier. |
-| Toggle comment | `Ctrl+/` | `Ctrl+/` | |
-| Multi-cursor next | `Ctrl+D` | `Ctrl+D` | |
-| Undo last cursor | `Ctrl+U` | `Ctrl+U` | |
-| Select line | `Ctrl+L` | `Ctrl+L` | |
-| Delete line | `Ctrl+Shift+K` | `Ctrl+Shift+K` | |
-| Duplicate line | `Shift+Alt+Down` | `Shift+Alt+Down` | |
-| Move line | `Alt+Up/Down` | `Alt+Up/Down` | |
-| Toggle soft wrap | `Alt+Z` | `Alt+Z` | `init.lua` helper. |
+| Save as | `Ctrl+Shift+S` | `Alt+S` | `Ctrl+Shift` is not distinguishable from `Ctrl` in terminals. |
+| Command palette | `Ctrl+Shift+P` | `Ctrl+E` | Micro `CommandMode`; `Ctrl+Shift+P` collides with `Ctrl+P`. |
+| Quick open | `Ctrl+P` | `Ctrl+P` | fzf plugin; overrides Micro's `FindPrevious`. |
+| Explorer | `Ctrl+Shift+E` | `F2`, `Ctrl+B` | Overrides Micro's `F2` Save and `Ctrl+B` `ShellMode`. |
+| Close editor | `Ctrl+W` | `Ctrl+Q` | Micro `Quit` closes the current pane; there is no `CloseTab` action and `Ctrl+W` defaults to `NextSplit`. |
+| Close all | `Ctrl+Shift+W` | `Alt+Q` | Binds `QuitAll`. |
+| Next tab | `Ctrl+Tab` | `Alt+.` | Micro default `NextTab`. |
+| Previous tab | `Ctrl+Shift+Tab` | `Alt+,` | Micro default `PreviousTab`. |
+| Split editor | `Ctrl+\` | `Ctrl+\` | `CtrlBackslash`. |
+| Horizontal split | `Ctrl+Shift+\` | `Alt+\` | Bind `HSplit`; verify the terminal sends `Alt+\`. |
+| Find | `Ctrl+F` | `Ctrl+F` | Micro default `Find`. |
+| Find next | `F3` | `F3` | Rebind `F3` from `Find` to `FindNext`. |
+| Find previous | `Shift+F3` | `Alt+P` | `Shift+F3` is terminal-dependent; `Alt+P` is reliable. |
+| Go to definition | `F12` | `F12`, `Alt+D` | LSP plugin binds `Alt+D`. |
+| Find references | `Shift+F12` | `Alt+R` | LSP plugin binds `Alt+R`; `Shift+F12` is terminal-dependent. |
+| Hover | `Ctrl+K Ctrl+I` | `Alt+K` | LSP plugin default. |
+| Rename symbol | `F2` | Deferred | Pinned LSP 0.6.2 has no `textDocument/rename`; track as a later task. |
+| Completion | `Ctrl+Space` | `Ctrl+Space` | LSP plugin default. |
+| Format document | `Shift+Alt+F` | `Alt+F` | LSP plugin default; `Shift+Alt+F` is terminal-dependent. |
+| Toggle comment | `Ctrl+/` | `CtrlUnderscore`, `Alt+/` | `Ctrl+/` arrives as `CtrlUnderscore` in most terminals. |
+| Multi-cursor next | `Ctrl+D` | `Ctrl+D` | Rebind from `DuplicateLine` to `SpawnMultiCursor`. |
+| Undo last cursor | `Ctrl+U` | `Ctrl+U` | Rebind from `ToggleMacro` to `RemoveMultiCursor`. |
+| Select line | `Ctrl+L` | `Ctrl+L` | Rebind from `command-edit:goto` to `SelectLine`. |
+| Delete line | `Ctrl+Shift+K` | `Ctrl+K` | `Ctrl+Shift` is not distinguishable; `Ctrl+K` is Micro's `CutLine`. |
+| Duplicate line | `Shift+Alt+Down` | `Alt+Shift+D` | Bind `AltD`; Micro has no directional duplicate-line action. |
+| Move line | `Alt+Up/Down` | `Alt+Up/Down` | Micro defaults `MoveLinesUp`/`MoveLinesDown`. |
+| Toggle soft wrap | `Alt+Z` | `Alt+Z` | `init.lua` helper toggles `softwrap`. |
 
 ### Keymap rules
 
@@ -314,6 +332,9 @@ binding: use Tilix, tmux, or the host terminal's own tabs and splits.
    it inside the editor.
 5. Add a `bindings.json` validation test so an invalid key name fails CI rather
    than silently doing nothing.
+6. Treat `Ctrl+Shift+<key>` as unavailable in terminals; Micro maps it to
+   `Ctrl+<key>`. Do not document a `Ctrl+Shift` shortcut unless a raw escape
+   sequence is explicitly configured.
 
 ---
 
@@ -328,23 +349,33 @@ binding: use Tilix, tmux, or the host terminal's own tabs and splits.
 | HTML | `vscode-html-language-server` | `vscode-langservers-extracted@4.10.0` |
 | CSS/SCSS/LESS | `vscode-css-language-server` | `vscode-langservers-extracted@4.10.0` |
 | JSON/JSONC | `vscode-json-language-server` | `vscode-langservers-extracted@4.10.0` |
-| Angular templates and TS | `@angular/language-server@21` | Angular LS 21; requires Node.js 20.19+. |
+| Angular templates and TS | `@angular/language-server@21` | Angular LS 21; `engines.node` is `^20.19.0 \|\| ^22.12.0 \|\| >=24.0.0`. |
 
 The exact pins are recorded in `tools/package.json` and `tools/package-lock.json`
 inside the distribution, not resolved at runtime.
 
 ### 7.2 Why a patched LSP plugin
 
-The upstream Micro LSP plugin (0.6.2 at the time of planning) has two verified
-reliability problems:
+The upstream Micro LSP plugin (0.6.2 at the time of planning) has these verified
+limitations:
 
-1. It appends fallback server entries, which can produce duplicate filetype
-   registrations and inconsistent dispatch.
-2. Its startup path can stop after the first server because of an empty
-   `rootUri` guard, so a second language server never starts for a buffer.
+1. Server processes and protocol state are keyed by filetype only
+   (`cmd[filetype]`, `id[filetype]`, `capabilities[filetype]`), so only one
+   server can run per filetype in a session.
+2. `rootUri` is a single global set from the editor's working directory when a
+   server starts; it is not recomputed per buffer or per project.
+3. `startServer` returns after the first matching filetype entry, so duplicate
+   filetype entries in `lsp.server` do not start a second server.
+4. `textDocument/rename` and code actions are not implemented.
+5. It sends Micro's filetype as the LSP `languageId`, so `.tsx` and `.jsx`
+   buffers are announced as `typescript` and `jsx` instead of
+   `typescriptreact` and `javascriptreact`.
 
-microboss vendors the pinned plugin and carries a small, documented patch for
-both issues. The patch is kept in `config/plug/lsp/` with an upstream note and a
+microboss vendors the pinned plugin and carries a documented patch that keys
+servers by `(server, root)`, computes `rootUri` per buffer, maps buffer
+extensions to the correct LSP `languageId`, and allows multiple servers per
+filetype. Rename and code actions are deferred unless a later task adds those
+handlers. The patch is kept in `config/plug/lsp/` with an upstream note and a
 regression test. If upstream fixes the issues, the patch is dropped and the
 plugin version is bumped deliberately.
 
@@ -389,11 +420,11 @@ the default is isolated.
 ### 7.5 LSP UX
 
 - diagnostics appear in the gutter and status line;
-- `F12`/`Alt+D` definition, `Shift+F12`/`Alt+R` references, `Alt+K` hover;
+- `F12`/`Alt+D` definition, `Alt+R` references, `Alt+K` hover;
 - `Ctrl+Space` completion with documentation preview;
-- `Ctrl+Shift+R` rename symbol;
-- `Shift+Alt+F` format;
-- code actions through the command palette;
+- `Alt+F` format;
+- rename and code actions are deferred until the pinned LSP plugin implements
+  `textDocument/rename` and `textDocument/codeAction`;
 - server startup failures are visible in `microboss doctor`, not silently
   swallowed;
 - logs are written to `~/.local/share/microboss/logs/lsp.log` with rotation.
@@ -539,13 +570,14 @@ is tagged and documented.
 
 ## 12. Acceptance criteria for 1.0
 
-1. A clean Linux machine with Micro and Node 20.19+ can run one install command
-   and then `microboss`.
+1. A clean Linux machine with Micro and Node `^20.19.0 || ^22.12.0 || >=24.0.0`
+   can run one install command and then `microboss`.
 2. `~/.config/micro` is byte-for-byte unchanged after installation and use.
 3. Opening `~/react-app` (React 19 + Vite + TypeScript) gives:
    - TSX diagnostics in the gutter;
    - completion for React and project symbols;
-   - hover, definition, references, and rename;
+   - hover, definition, and references; rename is deferred until the pinned LSP
+     plugin gains a `textDocument/rename` handler;
    - working `F2`/`Ctrl+B` explorer and `Ctrl+P` fuzzy find.
 4. Opening the Angular 21 demo project gives:
    - TypeScript diagnostics;
@@ -597,7 +629,7 @@ them to a temporary directory before editing.
 | --- | --- |
 | Micro plugin APIs change between releases. | Pin Micro and plugin versions; test upgrades explicitly. |
 | Upstream LSP plugin remains unmaintained. | Vendor the pinned plugin, keep the patch small, add regression tests. |
-| Angular LS requires a newer Node than the user's. | Doctor checks Node 20.19+; print the exact requirement; do not silently fall back. |
+| Angular LS requires a newer Node than the user's. | Doctor checks `^20.19.0 \|\| ^22.12.0 \|\| >=24.0.0`; print the exact requirement; do not silently fall back. |
 | TypeScript 7 drops `tsserver.js`. | Pin TypeScript 5.9.x in the isolated toolchain; check for the file in doctor. |
 | External terminal keybindings differ by emulator. | Verify Tilix, tmux, and common terminals; document limits; provide alternate bindings. |
 | fzf is not installed. | Installer installs a pinned binary or prints a package-manager command; editor still works without it. |
@@ -650,7 +682,8 @@ task is not complete until the matching documentation and tests are updated.
    with three `s` characters? The plan uses `microboss`.
 2. Should microboss support macOS in the first release, or Linux only?
 3. Is a bundled Node runtime acceptable if no suitable Node is installed, or
-   should the installer require Node 20.19+ and stop with instructions?
+   should the installer require Node `^20.19.0 || ^22.12.0 || >=24.0.0` and stop
+   with instructions?
 4. Should the first release include Prettier formatting, or defer it to the
    polish phase?
 
