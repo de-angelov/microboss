@@ -23,14 +23,14 @@ make it usable on day one.
 
 The product is successful when a developer can install one command, open a real
 React or Angular repository, and get completion, diagnostics, navigation, file
-exploration, fuzzy search, and a terminal without editing a config file.
+exploration, and fuzzy search without editing a config file.
 
 ### Design inspirations
 
 - **LazyVim:** sensible defaults, modular layers, pinned dependencies, a health
   check, and documentation that makes the defaults discoverable.
-- **VS Code:** familiar shortcuts, a file explorer, quick open, an integrated
-  terminal, and predictable editor behavior.
+- **VS Code:** familiar shortcuts, a file explorer, quick open, and predictable
+  editor behavior.
 - **Micro:** stay small, stay terminal-native, and prefer plain files that users
   can inspect and change.
 
@@ -43,7 +43,7 @@ exploration, fuzzy search, and a terminal without editing a config file.
 1. A single `microboss` command that launches an isolated Micro instance.
 2. A one-command installer that works on a clean Linux or macOS machine.
 3. VS Code-like defaults for the shortcuts developers use every day.
-4. A file explorer, fuzzy file finder, and integrated terminal.
+4. A file explorer and fuzzy file finder.
 5. Working LSP support for TypeScript, JavaScript, TSX/JSX, HTML, CSS, and JSON.
 6. Working Angular language support in Angular CLI workspaces, including
    external templates.
@@ -67,6 +67,8 @@ exploration, fuzzy search, and a terminal without editing a config file.
 
 - Reimplementing VS Code. Debugging, extensions, notebooks, and a GUI are out of
   scope.
+- Embedding a terminal. microboss is designed to run inside an existing terminal
+  tab (Tilix, tmux, SSH, or similar); it does not ship an embedded terminal.
 - Replacing the user's existing `~/.config/micro`. microboss is isolated by
   default.
 - Supporting every language. The initial language set is deliberately narrow.
@@ -81,7 +83,7 @@ exploration, fuzzy search, and a terminal without editing a config file.
 
 The primary user:
 
-- works in a terminal, often over SSH or inside tmux;
+- works in a terminal, often inside Tilix tabs, tmux, or over SSH;
 - edits TypeScript, React, and Angular projects;
 - knows VS Code shortcuts and does not want to relearn an editor;
 - wants fast startup and low memory use;
@@ -91,14 +93,14 @@ Typical session:
 
 ```sh
 cd ~/projects/my-react-app
-microboss .
+microboss src/App.tsx
 ```
 
-Then:
+Run this inside a Tilix tab (or a tmux pane); use the terminal's own tabs and
+splits for shells. Then:
 
 - `F2` or `Ctrl+B` opens the file explorer;
 - `Ctrl+P` opens fuzzy file search;
-- `Ctrl+`` opens the integrated terminal;
 - `Ctrl+Space` requests completion;
 - `F12` goes to definition;
 - `Shift+F12` finds references;
@@ -187,7 +189,7 @@ user-owned files without a backup.
 - `fzf` availability and shell integration;
 - plugin directory integrity and pinned versions;
 - `settings.json` and `bindings.json` syntax;
-- the integrated terminal and the configured shell;
+- the external terminal environment (`TERM`, true color, clipboard support);
 - write access to config, data, and cache directories;
 - the current project's detected language servers, when run inside a project.
 
@@ -235,19 +237,18 @@ Use the pinned `fzf` plugin with a project-aware ignore list:
 - ignore `.git`, `node_modules`, `dist`, `coverage`, and lockfile noise where
   appropriate.
 
-### 5.4 Integrated terminal
+### 5.4 External terminal environment
 
-Use Micro's built-in terminal support, with the `term` command:
+microboss runs inside an existing terminal tab. It does not embed a terminal or
+bind a shortcut to one.
 
-- `Ctrl+`` opens a terminal in a horizontal split;
-- `Ctrl+Shift+`` opens a new terminal tab;
-- the shell is taken from `$SHELL`, then `/bin/bash`, then `/bin/sh`;
-- the terminal inherits the microboss toolchain on `PATH`;
-- terminal tabs are named after the running command;
-- closing the terminal returns focus to the editor.
-
-The exact key names must be verified against the pinned Micro version because
-terminal keybindings are terminal-emulator dependent.
+- Launch microboss in a Tilix tab, tmux pane, or SSH session.
+- Use the terminal emulator's own tabs, panes, and splits for shells.
+- Set `TERM` and `COLORTERM` for true color, with a 256-color fallback.
+- Use OSC 52 for clipboard access when the terminal supports it; document the
+  limitation when it does not.
+- Ensure shells started outside microboss inherit the same toolchain `PATH` when
+  users want to run project commands alongside the editor.
 
 ### 5.5 Tabs, splits, search, and editing
 
@@ -268,7 +269,8 @@ terminal keybindings are terminal-emulator dependent.
 ## 6. VS Code keymap
 
 Where Micro has an equivalent action, use the VS Code shortcut. Where it does
-not, keep a documented Micro-native alternative.
+not, keep a documented Micro-native alternative. There is no embedded-terminal
+binding: use Tilix, tmux, or the host terminal's own tabs and splits.
 
 | Action | VS Code | microboss | Notes |
 | --- | --- | --- | --- |
@@ -277,8 +279,6 @@ not, keep a documented Micro-native alternative.
 | Command palette | `Ctrl+Shift+P` | `Ctrl+Shift+P` | Maps to Micro command mode. |
 | Quick open | `Ctrl+P` | `Ctrl+P` | fzf plugin. |
 | Explorer | `Ctrl+Shift+E` | `F2`, `Ctrl+B`, `Ctrl+Shift+E` | `F2` preserves existing muscle memory. |
-| Terminal | ``Ctrl+` `` | ``Ctrl+` `` | Built-in terminal. |
-| New terminal | ``Ctrl+Shift+` `` | ``Ctrl+Shift+` `` | Verify terminal key support. |
 | Close editor | `Ctrl+W` | `Ctrl+W` | |
 | Close all | `Ctrl+Shift+W` | `Ctrl+Q` | Micro native. |
 | Next tab | `Ctrl+Tab` | `Ctrl+Tab` | |
@@ -503,14 +503,13 @@ Every feature added after 1.0 must update at least one of these documents.
 - `bin/microboss` launcher and config isolation.
 - `settings.json`, `bindings.json`, and `init.lua`.
 - Pinned `filemanager` and `fzf` plugins.
-- Integrated terminal defaults.
 - TypeScript/JavaScript/TSX/JSX LSP through the patched plugin.
 - Installer, `doctor`, and smoke-test skeleton.
 - README, keymap, LSP, and troubleshooting docs.
 
 **Exit:** `microboss` opens a React TypeScript project and provides working
-completion, diagnostics, hover, definition, references, explorer, fuzzy find,
-and terminal without touching `~/.config/micro`.
+completion, diagnostics, hover, definition, references, explorer, and fuzzy find
+without touching `~/.config/micro`.
 
 ### Phase 2 — Angular and multi-server hardening
 
@@ -546,7 +545,7 @@ is tagged and documented.
    - TSX diagnostics in the gutter;
    - completion for React and project symbols;
    - hover, definition, references, and rename;
-   - working `F2`/`Ctrl+B` explorer, `Ctrl+P` fuzzy find, and `Ctrl+`` terminal.
+   - working `F2`/`Ctrl+B` explorer and `Ctrl+P` fuzzy find.
 4. Opening the Angular 21 demo project gives:
    - TypeScript diagnostics;
    - external-template diagnostics and completion;
@@ -560,7 +559,7 @@ is tagged and documented.
 8. Startup does not block on a language server that is not needed for the
    current buffer.
 9. The keymap parses without errors and every documented shortcut is either
-   functional or explicitly marked as a terminal limitation.
+   functional or explicitly marked as a terminal-emulator limitation.
 10. All documentation links resolve and the install instructions work from a
     clean checkout.
 
@@ -578,7 +577,7 @@ is tagged and documented.
 | Read-only home / no write access | Clear error before partial install. |
 | Re-run installer | Idempotence, backups, no duplicate plugin entries. |
 | `--dev` mode | Symlinked config updates live; uninstall leaves repo intact. |
-| Terminal without true color | Graceful 256-color fallback. |
+| Terminal emulator without true color | Graceful 256-color fallback. |
 | SSH session without clipboard | Documented OSC 52 behavior and fallback. |
 
 Local verification uses the existing projects:
@@ -599,7 +598,7 @@ them to a temporary directory before editing.
 | Upstream LSP plugin remains unmaintained. | Vendor the pinned plugin, keep the patch small, add regression tests. |
 | Angular LS requires a newer Node than the user's. | Doctor checks Node 20.19+; print the exact requirement; do not silently fall back. |
 | TypeScript 7 drops `tsserver.js`. | Pin TypeScript 5.9.x in the isolated toolchain; check for the file in doctor. |
-| Terminal keybindings differ by emulator. | Verify the common terminals; document limits; provide alternate bindings. |
+| External terminal keybindings differ by emulator. | Verify Tilix, tmux, and common terminals; document limits; provide alternate bindings. |
 | fzf is not installed. | Installer installs a pinned binary or prints a package-manager command; editor still works without it. |
 | LSP startup slows editor launch. | Lazy-start per project/buffer; never block the UI on a server. |
 | Monorepo root detection is wrong. | Explicit rules, `microboss lsp` diagnostics, and fixture tests. |

@@ -5,9 +5,9 @@
 and Angular development.
 
 It aims to feel like a lightweight VS Code for the terminal: a familiar editor
-surface, a file explorer, fuzzy file finding, an integrated terminal, and
-language-server support that works in real projects without a pile of manual
-setup.
+surface, a file explorer, fuzzy file finding, and language-server support that
+works in real projects without a pile of manual setup. It runs inside an existing
+terminal tab (Tilix, tmux, SSH, or similar); it does not embed a terminal.
 
 ```sh
 microboss
