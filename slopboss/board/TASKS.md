@@ -4,46 +4,52 @@ Active work board. Keep at most one task In Progress per dev-agent lane.
 
 ## Dev Agent 1 In Progress
 
-### Add default editor settings
+### Add VS Code-like keymap and validation
 
-Task ID: CONF-01
+Task ID: KEY-01
 Owner: Dev Agent 1
-Branch: agent/1/conf-01-settings
+Branch: agent/1/key-01-bindings
 Status: In Progress
 Category: AFK
 
 ## Objective
 
-Ship a valid `config/settings.json` with the editor defaults in `PLAN.md` §5.1
-using exact Micro 2.0.13 option names.
+Ship a `bindings.json` that uses only keys Micro 2.0.13 can bind, and document
+the differences from VS Code.
 
 ## Scope
 
-- `config/settings.json`
-- `tests/smoke/test_settings.sh`
+- `config/bindings.json`
+- `config/init.lua` (only the soft-wrap helper if required for `Alt+Z`)
+- `docs/keymap.md`
+- `tests/smoke/test_bindings.sh`
 
 ## Out of Scope
 
-- Keybindings, plugin options, LSP server configuration, installer, or an
-  embedded terminal.
-- Adding `init.lua` unless a setting cannot be expressed in JSON.
+- Plugin implementation, LSP actions, installer, or embedded-terminal bindings.
+- Vendoring `filemanager`, `fzf`, or `lsp`.
 
 ## Acceptance Criteria
 
-- `jq empty config/settings.json` passes.
-- Settings include `mouse`, `ruler`, `statusline`, `softwrap`, `saveundo`,
-  `backup`, `backupdir`, `autoindent`, `rmtrailingws`, `paste`, `smartpaste`,
-  `clipboard`, and `scrollspeed`.
-- `backupdir` points under `~/.cache/microboss` without hard-coding a user's home
-  directory.
-- The test asserts the presence and JSON type of every setting.
-- No reference to `~/.config/micro` appears in the config.
+- `jq empty config/bindings.json` passes.
+- No binding uses `Ctrl+Shift+<key>`, `Ctrl+Tab`, `Ctrl+\``, `Shift+Escape`, or
+  another key absent from Micro 2.0.13's bindable key list.
+- The documented set covers: `F2`/`Ctrl+B` tree, `Ctrl+P` fzf, `Ctrl+E`
+  command mode, `Ctrl+Q` quit, `Alt+Q` quit all, `Alt+.`/`Alt+,` tabs,
+  `Ctrl+\` vsplit, `Alt+\` hsplit, `F3` find next, `Alt+P` find previous,
+  `F12`/`Alt+D` definition, `Alt+R` references, `Alt+K` hover, `Ctrl+Space`
+  completion, `Alt+F` format, `CtrlUnderscore`/`Alt+/` comment, `Ctrl+D`
+  multi-cursor, `Ctrl+U` remove cursor, `Alt+C` clear cursors, `Alt+Shift+D`
+  duplicate line, `Alt+Up/Down` move line, and `Alt+Z` soft wrap.
+- The test rejects unknown key names and checks that every documented shortcut is
+  present in `bindings.json`.
+- `docs/keymap.md` explains the unavoidable VS Code differences.
 
 ## Verification
 
 ```sh
-jq empty config/settings.json
-bash tests/smoke/test_settings.sh
+jq empty config/bindings.json
+bash tests/smoke/test_bindings.sh
 ```
 
 ## Progress Notes

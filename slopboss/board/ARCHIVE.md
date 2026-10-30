@@ -91,3 +91,42 @@ bash tests/smoke/test_launcher.sh
 - `git diff --check` exit 0.
 - Squash commit `dd20fed` on `main`; `git merge-base --is-ancestor dd20fed
   origin/main` exit 0.
+
+### Add default editor settings
+
+Task ID: CONF-01
+Owner: Dev Agent 1
+Branch: agent/1/conf-01-settings
+Status: Done
+Completed: 2026-10-30
+
+## Objective
+
+Ship a valid `config/settings.json` with the editor defaults in `PLAN.md` §5.1
+using exact Micro 2.0.13 option names.
+
+## Result
+
+- `config/settings.json`: mouse, ruler, statusline, saveundo, backup,
+  autoindent, rmtrailingws, paste, and smartpaste enabled; softwrap disabled;
+  `backupdir` set to `~/.cache/microboss`; `clipboard` set to `terminal`;
+  `scrollspeed` kept at Micro's default of 2.
+- `tests/smoke/test_settings.sh`: 42 assertions covering JSON validity, the
+  presence and JSON type of every required setting, expected default values,
+  portable `backupdir`, and the absence of a `~/.config/micro` reference.
+- Removed the now-obsolete `config/.gitkeep` placeholder.
+
+## Verification
+
+```sh
+jq empty config/settings.json
+bash tests/smoke/test_settings.sh
+git diff --check
+```
+
+- `jq empty config/settings.json` exit 0.
+- `bash tests/smoke/test_settings.sh`: 42 passed, 0 failed (re-run on `main`
+  after the squash merge).
+- `git diff --check` exit 0.
+- Squash commit `360c522` on `main`; `git merge-base --is-ancestor 360c522
+  origin/main` exit 0.
