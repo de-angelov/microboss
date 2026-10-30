@@ -494,7 +494,8 @@ Every feature added after 1.0 must update at least one of these documents.
 - Create the `microboss` repository and this plan.
 - Set up the slopboss board with one dev agent.
 - Run a planning session using OpenCode DeepSeek free.
-- Produce a task breakdown in `BACKLOG.md`; do not implement editor code yet.
+- Produce a task breakdown in `docs/plan-review.md`; do not implement editor code
+  yet. The team lead promotes the reviewed tasks into `BACKLOG.md` afterward.
 
 **Exit:** the plan is accepted and the backlog contains small, ordered tasks.
 
@@ -633,8 +634,9 @@ These are the defaults for implementation unless the user changes them:
 - Provider: `opencode`
 - Model: `opencode/deepseek-v4.1-flash-free`
 - Dev agents: 1
-- First task: read this plan, validate assumptions, and write a concrete
-  task breakdown to `BACKLOG.md`; do not write editor code.
+- First task: read this plan, validate assumptions, and write a concrete task
+  breakdown to `docs/plan-review.md`; do not write editor code. The team lead
+  promotes the reviewed tasks into `BACKLOG.md` afterward.
 
 The repository's `PLAN.md` is the source of truth for scope. The board's
 `TECH.md` is the source of truth for build, test, and verification commands. A
