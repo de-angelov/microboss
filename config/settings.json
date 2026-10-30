@@ -1,0 +1,15 @@
+{
+    "mouse": true,
+    "ruler": true,
+    "statusline": true,
+    "softwrap": false,
+    "saveundo": true,
+    "backup": true,
+    "backupdir": "~/.cache/microboss",
+    "autoindent": true,
+    "rmtrailingws": true,
+    "paste": true,
+    "smartpaste": true,
+    "clipboard": "terminal",
+    "scrollspeed": 2
+}
