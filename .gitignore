@@ -1,0 +1,16 @@
+# OS and editor noise
+.DS_Store
+*.swp
+*.swo
+*~
+log.txt
+micro.prof
+
+# Installed or generated tooling
+node_modules/
+tests/tmp/
+tests/artifacts/
+
+# Local environment
+.env
+.env.local
