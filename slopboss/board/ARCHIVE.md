@@ -47,3 +47,47 @@ git diff --check
 - `TECH.md` still mentions an integrated terminal and `Micro 2.0.13+`. It
   conflicts with the out-of-scope decision and the pinned baseline; the Team
   Lead should align it.
+
+### Repository skeleton and isolated launcher
+
+Task ID: FOUND-01
+Owner: Dev Agent 1
+Branch: agent/1/found-01-launcher
+Status: Done
+Completed: 2026-10-30
+
+## Objective
+
+Add the minimal distribution skeleton and a launcher that starts Micro with an
+isolated config directory.
+
+## Result
+
+- `bin/microboss`: POSIX `sh` launcher that resolves its own path through
+  symlinks, exports `MICROBOSS_ROOT`, `MICROBOSS_CONFIG`, `MICROBOSS_DATA`, and
+  `MICROBOSS_CACHE`, fails with an actionable message when `micro` is missing,
+  and execs `micro -config-dir "$MICROBOSS_CONFIG" "$@"`.
+- Directories default under `HOME` with XDG support
+  (`${XDG_CONFIG_HOME:-$HOME/.config}/microboss` and equivalents) and remain
+  overridable through the three `MICROBOSS_*` variables.
+- `config/.gitkeep`, `tests/fixtures/empty/.gitkeep`, and a
+  `docs/architecture.md` stub.
+- `tests/smoke/test_launcher.sh`: 33 assertions using a temporary `HOME` and a
+  fake `micro`; covers default and overridden directories, XDG bases, argument
+  passthrough (`FILE`, `+LINE:COL`, `--`), symlinked invocation, POSIX `sh`
+  invocation, missing `micro`, and that `~/.config/micro` is neither created nor
+  modified.
+
+## Verification
+
+```sh
+bash -n bin/microboss
+bash tests/smoke/test_launcher.sh
+```
+
+- `bash -n bin/microboss` exit 0; `sh -n bin/microboss` exit 0.
+- `bash tests/smoke/test_launcher.sh`: 33 passed, 0 failed (re-run on `main`
+  after the squash merge).
+- `git diff --check` exit 0.
+- Squash commit `dd20fed` on `main`; `git merge-base --is-ancestor dd20fed
+  origin/main` exit 0.

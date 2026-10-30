@@ -4,47 +4,46 @@ Active work board. Keep at most one task In Progress per dev-agent lane.
 
 ## Dev Agent 1 In Progress
 
-### Repository skeleton and isolated launcher
+### Add default editor settings
 
-Task ID: FOUND-01
+Task ID: CONF-01
 Owner: Dev Agent 1
-Branch: agent/1/found-01-launcher
+Branch: agent/1/conf-01-settings
 Status: In Progress
 Category: AFK
 
 ## Objective
 
-Add the minimal distribution skeleton and a launcher that starts Micro with an
-isolated config directory.
+Ship a valid `config/settings.json` with the editor defaults in `PLAN.md` §5.1
+using exact Micro 2.0.13 option names.
 
 ## Scope
 
-- `bin/microboss`
-- `config/` directory skeleton
-- `docs/architecture.md` stub
-- `tests/smoke/test_launcher.sh`
-- `tests/fixtures/empty/.gitkeep`
+- `config/settings.json`
+- `tests/smoke/test_settings.sh`
 
 ## Out of Scope
 
-- Editor settings, keybindings, plugins, toolchain, installer, doctor, LSP.
-- Embedded terminal support.
+- Keybindings, plugin options, LSP server configuration, installer, or an
+  embedded terminal.
+- Adding `init.lua` unless a setting cannot be expressed in JSON.
 
 ## Acceptance Criteria
 
-- `bin/microboss` is POSIX `sh`, resolves its own path through a symlink, and
-  execs `micro -config-dir "$MICROBOSS_CONFIG" "$@"`.
-- It fails with a clear message when `micro` is not on `PATH`.
-- A temp-`HOME` test asserts that `~/.config/micro` is not created or modified.
-- `MICROBOSS_CONFIG`, `MICROBOSS_DATA`, and `MICROBOSS_CACHE` can override the
-  default directories for tests.
-- `bash -n bin/microboss` passes.
+- `jq empty config/settings.json` passes.
+- Settings include `mouse`, `ruler`, `statusline`, `softwrap`, `saveundo`,
+  `backup`, `backupdir`, `autoindent`, `rmtrailingws`, `paste`, `smartpaste`,
+  `clipboard`, and `scrollspeed`.
+- `backupdir` points under `~/.cache/microboss` without hard-coding a user's home
+  directory.
+- The test asserts the presence and JSON type of every setting.
+- No reference to `~/.config/micro` appears in the config.
 
 ## Verification
 
 ```sh
-bash -n bin/microboss
-bash tests/smoke/test_launcher.sh
+jq empty config/settings.json
+bash tests/smoke/test_settings.sh
 ```
 
 ## Progress Notes
