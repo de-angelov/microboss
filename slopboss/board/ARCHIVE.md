@@ -130,3 +130,51 @@ git diff --check
 - `git diff --check` exit 0.
 - Squash commit `360c522` on `main`; `git merge-base --is-ancestor 360c522
   origin/main` exit 0.
+
+### Add VS Code-like keymap and validation
+
+Task ID: KEY-01
+Owner: Dev Agent 1
+Branch: agent/1/key-01-bindings
+Status: Done
+Completed: 2026-10-30
+
+## Objective
+
+Ship a `bindings.json` that uses only keys Micro 2.0.13 can bind, and document
+the differences from VS Code.
+
+## Result
+
+- `config/bindings.json`: VS Code-like keymap covering the explorer, fzf quick
+  open, command mode, quit, tabs, splits, search, LSP navigation, completion and
+  formatting, comments, multi-cursor editing, line editing, and soft wrap. Keys
+  use Micro spellings without `+` separators.
+- `config/init.lua`: `toggle_softwrap` helper for `Alt+Z`; Micro 2.0.13 has no
+  built-in soft-wrap toggle action.
+- `docs/keymap.md`: quick-reference table plus the unavoidable terminal and
+  Micro differences (`Ctrl+Shift`, `Ctrl+Tab`, `Ctrl+\``, `Shift+Escape`,
+  missing `CloseTab`, directional duplicate-line, `Ctrl+/`, and `Ctrl+Space`).
+- `tests/smoke/test_bindings.sh`: 117 assertions. Validates JSON shape, checks
+  every key against Micro 2.0.13's named events and single-rune fallback,
+  rejects the forbidden chords, and keeps `docs/keymap.md` and `bindings.json`
+  in sync in both directions.
+
+## Verification
+
+```sh
+jq empty config/bindings.json
+bash tests/smoke/test_bindings.sh
+bash -n tests/smoke/*.sh
+git diff --check
+```
+
+- `jq empty config/bindings.json` exit 0.
+- `bash tests/smoke/test_bindings.sh`: 117 passed, 0 failed (re-run on `main`
+  after the squash merge).
+- `bash -n tests/smoke/*.sh` exit 0.
+- `git diff --check` exit 0.
+- All binding keys were accepted by Micro 2.0.13's `findEvent` parser in a
+  throwaway test against the upstream source.
+- Squash commit `b6d54fc` on `main`; `git merge-base --is-ancestor b6d54fc
+  origin/main` exit 0.

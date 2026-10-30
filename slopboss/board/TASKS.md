@@ -4,52 +4,45 @@ Active work board. Keep at most one task In Progress per dev-agent lane.
 
 ## Dev Agent 1 In Progress
 
-### Add VS Code-like keymap and validation
+### Harden launcher for symlinked installs and toolchain
 
-Task ID: KEY-01
+Task ID: LAUNCH-01
 Owner: Dev Agent 1
-Branch: agent/1/key-01-bindings
+Branch: agent/1/launch-01-hardening
 Status: In Progress
 Category: AFK
 
 ## Objective
 
-Ship a `bindings.json` that uses only keys Micro 2.0.13 can bind, and document
-the differences from VS Code.
+Harden the launcher for symlinked installs, the isolated toolchain, cursor
+arguments, and test overrides.
 
 ## Scope
 
-- `config/bindings.json`
-- `config/init.lua` (only the soft-wrap helper if required for `Alt+Z`)
-- `docs/keymap.md`
-- `tests/smoke/test_bindings.sh`
+- `bin/microboss`
+- `tests/smoke/test_launcher.sh`
+- `docs/architecture.md`
 
 ## Out of Scope
 
-- Plugin implementation, LSP actions, installer, or embedded-terminal bindings.
-- Vendoring `filemanager`, `fzf`, or `lsp`.
+- Installer, update, doctor, or plugin behavior.
 
 ## Acceptance Criteria
 
-- `jq empty config/bindings.json` passes.
-- No binding uses `Ctrl+Shift+<key>`, `Ctrl+Tab`, `Ctrl+\``, `Shift+Escape`, or
-  another key absent from Micro 2.0.13's bindable key list.
-- The documented set covers: `F2`/`Ctrl+B` tree, `Ctrl+P` fzf, `Ctrl+E`
-  command mode, `Ctrl+Q` quit, `Alt+Q` quit all, `Alt+.`/`Alt+,` tabs,
-  `Ctrl+\` vsplit, `Alt+\` hsplit, `F3` find next, `Alt+P` find previous,
-  `F12`/`Alt+D` definition, `Alt+R` references, `Alt+K` hover, `Ctrl+Space`
-  completion, `Alt+F` format, `CtrlUnderscore`/`Alt+/` comment, `Ctrl+D`
-  multi-cursor, `Ctrl+U` remove cursor, `Alt+C` clear cursors, `Alt+Shift+D`
-  duplicate line, `Alt+Up/Down` move line, and `Alt+Z` soft wrap.
-- The test rejects unknown key names and checks that every documented shortcut is
-  present in `bindings.json`.
-- `docs/keymap.md` explains the unavoidable VS Code differences.
+- Works when invoked through a symlink in a temporary `PATH` directory.
+- Prepends `$MICROBOSS_DATA/tools/node_modules/.bin` to `PATH` when that
+  directory exists, without duplicating an existing entry.
+- Passes `FILE`, `+LINE:COL`, and `--` arguments through unchanged.
+- Respects `MICROBOSS_CONFIG`, `MICROBOSS_DATA`, and `MICROBOSS_CACHE`.
+- The test runs with a temporary `HOME` and asserts `~/.config/micro` is not
+  created or modified.
+- `bash -n bin/microboss` passes.
 
 ## Verification
 
 ```sh
-jq empty config/bindings.json
-bash tests/smoke/test_bindings.sh
+bash -n bin/microboss
+bash tests/smoke/test_launcher.sh
 ```
 
 ## Progress Notes
