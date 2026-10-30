@@ -463,6 +463,11 @@ microboss/
 │   ├── lsp.md
 │   ├── troubleshooting.md
 │   └── updating.md
+├── slopboss/
+│   ├── README.md
+│   ├── backup.sh
+│   ├── restore.sh
+│   └── board/              # portable board snapshot
 └── tests/
     ├── fixtures/
     │   ├── react-ts/

@@ -51,6 +51,7 @@ microboss/
 ├── docs/                # user-facing docs and troubleshooting
 ├── scripts/             # install, update, doctor, smoke tests
 ├── tests/               # fixtures and automated smoke tests
+├── slopboss/            # portable board snapshot + backup/restore scripts
 ├── PLAN.md              # the implementation plan
 └── VERSION
 ```
@@ -59,4 +60,6 @@ microboss/
 
 This repository is developed with **slopboss**, one agent at a time. The board
 keeps planning, implementation, and verification as small, reviewable tasks.
-See [PLAN.md](PLAN.md) for the phased delivery plan.
+See [PLAN.md](PLAN.md) for the phased delivery plan and
+[slopboss/README.md](slopboss/README.md) for restoring the board on another
+machine.
