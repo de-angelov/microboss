@@ -1,0 +1,60 @@
+#!/bin/sh
+# microboss launcher.
+#
+# Starts Micro with the isolated microboss configuration. POSIX sh only: no
+# bashisms, no dependency on the current working directory.
+
+set -u
+
+PROGRAM=microboss
+MICRO_MIN_VERSION=2.0.13
+
+die() {
+    printf '%s: %s\n' "$PROGRAM" "$1" >&2
+    exit "${2:-1}"
+}
+
+# Print the directory that contains the real launcher file. $1 is the path this
+# script was invoked as ($0), which may be relative or a symlink.
+resolve_script_dir() {
+    _mb_script=$1
+    case $_mb_script in
+        */*) ;;
+        *)
+            _mb_script=$(command -v "$_mb_script" 2>/dev/null) ||
+                die "cannot locate the $PROGRAM launcher on PATH" 127
+            ;;
+    esac
+    while [ -L "$_mb_script" ]; do
+        _mb_dir=$(CDPATH= cd -P "$(dirname "$_mb_script")" 2>/dev/null && pwd) ||
+            die "cannot resolve the $PROGRAM launcher directory"
+        _mb_target=$(readlink "$_mb_script") ||
+            die "cannot resolve the $PROGRAM launcher symlink: $_mb_script"
+        case $_mb_target in
+            /*) _mb_script=$_mb_target ;;
+            *) _mb_script=$_mb_dir/$_mb_target ;;
+        esac
+    done
+    CDPATH= cd -P "$(dirname "$_mb_script")" && pwd
+}
+
+if [ -z "${HOME:-}" ]; then
+    die "HOME is not set; microboss needs it to find its config, data, and cache directories"
+fi
+
+BIN_DIR=$(resolve_script_dir "$0") || exit 1
+MICROBOSS_ROOT=$(dirname "$BIN_DIR")
+export MICROBOSS_ROOT
+
+# Isolated directories. Every one can be overridden, which keeps tests and
+# alternate installs away from the real user directories.
+MICROBOSS_CONFIG=${MICROBOSS_CONFIG:-${XDG_CONFIG_HOME:-$HOME/.config}/microboss}
+MICROBOSS_DATA=${MICROBOSS_DATA:-${XDG_DATA_HOME:-$HOME/.local/share}/microboss}
+MICROBOSS_CACHE=${MICROBOSS_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/microboss}
+export MICROBOSS_CONFIG MICROBOSS_DATA MICROBOSS_CACHE
+
+if ! command -v micro >/dev/null 2>&1; then
+    die "micro not found on PATH. Install Micro $MICRO_MIN_VERSION or newer (https://micro-editor.github.io/) and try again." 127
+fi
+
+exec micro -config-dir "$MICROBOSS_CONFIG" "$@"
