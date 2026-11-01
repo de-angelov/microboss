@@ -40,6 +40,11 @@ updates. `filemanager` 3.5.1 is vendored with its `repo.json`, `LICENSE`, and a
 `config/init.lua` installs a `postinit` wrapper that restores focus to the
 editor after the tree opens.
 
+`fzf` 1.1.1 is vendored with its `repo.json`, `README.md`, and a `VERSION` file.
+Its one small patch checks for the `fzf` binary before opening a terminal pane
+and reports a missing binary in the info bar instead of failing with an opaque
+shell error.
+
 ## Launcher
 
 `bin/microboss` is a POSIX `sh` script. It:
@@ -52,9 +57,12 @@ editor after the tree opens.
 3. prepends `$MICROBOSS_DATA/tools/node_modules/.bin` to `PATH` when it exists,
    so the pinned toolchain wins over global tools; an entry that is already on
    `PATH` is left in place instead of being duplicated;
-4. checks that `micro` is on `PATH` and fails with an actionable message when it
+4. exports `FZF_DEFAULT_COMMAND` for the vendored `fzf` plugin: `rg --files`
+   with project ignores when `rg` is available, otherwise a portable `find`
+   fallback;
+5. checks that `micro` is on `PATH` and fails with an actionable message when it
    is not;
-5. execs `micro -config-dir "$MICROBOSS_CONFIG" "$@"`, passing every user
+6. execs `micro -config-dir "$MICROBOSS_CONFIG" "$@"`, passing every user
    argument, including `FILE`, `+LINE:COL`, and `--`, through unchanged.
 
 The launcher does not create directories, install plugins, or modify the user's
@@ -65,6 +73,7 @@ environment; those are installer and `doctor` responsibilities.
 ```sh
 bash -n bin/microboss
 bash tests/smoke/test_launcher.sh
+bash tests/smoke/test_fzf.sh
 ```
 
 The smoke test runs the launcher with a temporary `HOME` and a fake `micro`, and

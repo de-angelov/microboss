@@ -71,6 +71,16 @@ if [ -d "$MICROBOSS_TOOLCHAIN_BIN" ]; then
     esac
 fi
 
+# Project-aware listing for the vendored fzf plugin. rg respects .gitignore and
+# works outside git repositories; the find fallback keeps quick open usable on
+# machines without ripgrep. fzf runs this value through the user's shell.
+if command -v rg >/dev/null 2>&1; then
+    FZF_DEFAULT_COMMAND="rg --files --hidden --glob '!.git' --glob '!node_modules' --glob '!dist' --glob '!coverage'"
+else
+    FZF_DEFAULT_COMMAND="find . -type d \\( -name .git -o -name node_modules -o -name dist -o -name coverage \\) -prune -o -type f -print | sed 's|^\\./||'"
+fi
+export FZF_DEFAULT_COMMAND
+
 if ! command -v micro >/dev/null 2>&1; then
     die "micro not found on PATH. Install Micro $MICRO_MIN_VERSION or newer (https://micro-editor.github.io/) and try again." 127
 fi

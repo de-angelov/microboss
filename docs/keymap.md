@@ -14,7 +14,7 @@ shortcut does and why some VS Code shortcuts cannot be reproduced.
 | Save | `Ctrl+S` | `Ctrl+S` | Micro default. |
 | Save as | `Ctrl+Shift+S` | `Alt+S` | `Ctrl+Shift` is not distinguishable from `Ctrl` in most terminals. |
 | Command palette | `Ctrl+Shift+P` | `Ctrl+E` | Opens Micro's command mode. |
-| Quick open | `Ctrl+P` | `Ctrl+P` | Runs the fzf plugin command. Overrides Micro's `FindPrevious`. |
+| Quick open | `Ctrl+P` | `Ctrl+P` | Runs the vendored fzf plugin. Overrides Micro's `FindPrevious`. Project files respect `.gitignore` and exclude `.git`, `node_modules`, `dist`, and `coverage`. |
 | Explorer | `Ctrl+Shift+E` | `F2`, `Ctrl+B` | Toggles the file tree and returns focus to the editor. Overrides Micro's `F2` Save and `Ctrl+B` shell mode. |
 | Close editor | `Ctrl+W` | `Ctrl+Q` | Micro's `Quit` closes the current pane. There is no `CloseTab` action, and `Ctrl+W` is `NextSplit`. |
 | Close all | `Ctrl+Shift+W` | `Alt+Q` | Quits every tab and split. |
@@ -50,6 +50,21 @@ VCS-ignored paths are hidden by default: `config/settings.json` sets
 `filemanager.showdotfiles` and `filemanager.showignored` to `false`. The
 upstream plugin focuses the new tree pane, so `config/init.lua` wraps its `tree`
 command and returns focus to the editor after the tree opens.
+
+## Quick open
+
+`Ctrl+P` runs the vendored `fzf` plugin. The launcher exports
+`FZF_DEFAULT_COMMAND`, so the file list is project-aware:
+
+- when `rg` is available, `rg --files` respects `.gitignore` and also excludes
+  `.git`, `node_modules`, `dist`, and `coverage`;
+- when `rg` is missing, a portable `find` command prunes the same directories;
+- both forms include hidden files, so files such as `.gitignore` remain
+  reachable.
+
+`fzf` is optional. If the binary is missing, `Ctrl+P` shows
+`fzf not found on PATH. Install fzf to use quick open (Ctrl+P).` in the info bar
+and the editor keeps running.
 
 ## Unavoidable VS Code differences
 
