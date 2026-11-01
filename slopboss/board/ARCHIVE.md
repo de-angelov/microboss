@@ -4,6 +4,38 @@ Completed work history. Normal orchestrator prompts do not load this file.
 
 ## Done
 
+### Pinned language-server toolchain
+
+Task ID: TOOLS-01
+Owner: Dev Agent 1
+Branch: agent/1/tools-01-toolchain
+Status: Done
+Completed: 2026-11-01
+Category: AFK
+
+## Result
+
+- Added `tools/package.json` and `tools/package-lock.json` with exact pins for
+  `typescript` 5.9.3, `typescript-language-server` 5.3.0,
+  `vscode-langservers-extracted` 4.10.0, and `@angular/language-server` 21.2.25.
+- `tests/smoke/test_tools.sh` validates the manifest and lockfile pins and runs
+  `npm ci` with temporary cache/log directories under `tests/tmp`.
+- `tools/node_modules/typescript/lib/tsserver.js` is present after install.
+
+## Verification
+
+```sh
+npm ci --prefix tools --ignore-scripts
+npm ls --prefix tools --depth=0
+bash tests/smoke/test_tools.sh
+```
+
+- `npm ci --prefix tools --ignore-scripts` exit 0; 37 packages installed.
+- `npm ls --prefix tools --depth=0` reports the four exact versions.
+- `bash tests/smoke/test_tools.sh`: 23 passed, 0 failed.
+- Squash commit `d0b1596` on `main`; `git merge-base --is-ancestor d0b1596
+  origin/main` exit 0.
+
 ### Vendor fzf and project-aware ignores
 
 Task ID: PLUG-02
