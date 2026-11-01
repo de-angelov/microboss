@@ -63,7 +63,7 @@ check_prefix() {
     esac
 }
 
-for tool in jq micro tmux rg; do
+for tool in jq micro tmux; do
     if ! command -v "$tool" >/dev/null 2>&1; then
         printf 'missing required test tool: %s\n' "$tool" >&2
         exit 1
@@ -123,7 +123,11 @@ for tool in dirname readlink; do
     ln -s "$tool_path" "$FAKE_NO_RG/$tool"
 done
 cp "$FAKE_RG/micro" "$FAKE_NO_RG/micro"
-ln -s "$(command -v rg)" "$FAKE_RG/rg"
+
+# The launcher only probes for rg on PATH, so a stub is enough to exercise the
+# rg branch on hosts that do not have ripgrep installed.
+printf '#!/bin/sh\nexit 0\n' > "$FAKE_RG/rg"
+chmod +x "$FAKE_RG/rg"
 
 run_launcher() {
     local path=$1
