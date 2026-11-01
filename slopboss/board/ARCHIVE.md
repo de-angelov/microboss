@@ -4,6 +4,44 @@ Completed work history. Normal orchestrator prompts do not load this file.
 
 ## Done
 
+### Vendor fzf and project-aware ignores
+
+Task ID: PLUG-02
+Owner: Dev Agent 1
+Branch: agent/1/plug-02-fzf
+Status: Done
+Completed: 2026-11-01
+Category: AFK
+
+## Result
+
+- Vendored fzf 1.1.1 under `config/plug/fzf` with `VERSION`, `repo.json`,
+  `README.md`, and a small `main.lua` patch that reports a missing `fzf` binary
+  in the info bar.
+- Launcher exports `FZF_DEFAULT_COMMAND` via `rg --files` with
+  `.git`/`node_modules`/`dist`/`coverage` excludes and a portable `find`
+  fallback.
+- `Ctrl+P` remains mapped to `command:fzf`.
+- `tests/smoke/test_fzf.sh`: static checks, both launcher paths, and a
+  missing-fzf tmux integration test using a unique socket and temporary `HOME`.
+- `docs/keymap.md` and `docs/architecture.md` document quick open and the
+  project-aware listing behavior.
+
+## Verification
+
+```sh
+jq empty config/bindings.json
+bash tests/smoke/test_fzf.sh
+bash tests/smoke/test_launcher.sh
+bash tests/smoke/test_bindings.sh
+```
+
+- `bash tests/smoke/test_fzf.sh`: 29 passed, 0 failed.
+- `bash tests/smoke/test_launcher.sh`: 42 passed, 0 failed.
+- `bash tests/smoke/test_bindings.sh`: 120 passed, 0 failed.
+- Squash commit `895c861` on `main`; `git merge-base --is-ancestor 895c861
+  origin/main` exit 0.
+
 ### Validate the microboss plan and produce the implementation backlog
 
 Task ID: PLAN-01
