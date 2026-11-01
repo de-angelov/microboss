@@ -222,3 +222,48 @@ bash tests/smoke/test_launcher.sh
 - `git diff --check` exit 0.
 - Squash commit `1d052f1` on `main`; `git merge-base --is-ancestor 1d052f1
   origin/main` exit 0.
+
+### Vendor filemanager and explorer defaults
+
+Task ID: PLUG-01
+Owner: Dev Agent 1
+Branch: agent/1/plug-01-filemanager
+Status: Done
+Completed: 2026-11-01
+
+## Objective
+
+Vendor `filemanager` 3.5.1, bind the explorer, hide noise by default, and keep
+editor focus.
+
+## Result
+
+- `config/plug/filemanager/`: vendored filemanager 3.5.1 with `repo.json`,
+  `LICENSE`, `VERSION`, `syntax.yaml`, and the upstream plugin files.
+- `config/settings.json`: `filemanager.showdotfiles` and
+  `filemanager.showignored` set to `false`.
+- `config/init.lua`: `postinit` wrapper replaces the plugin's `tree` command,
+  toggles the tree, and calls `PreviousSplit()` when the tree takes focus.
+- `config/bindings.json`: `F2` and `Ctrl+B` continue to run `command:tree`.
+- `docs/architecture.md` and `docs/keymap.md`: document the vendored plugin,
+  explorer defaults, and focus behavior.
+- `tests/smoke/test_filemanager.sh`: 31 assertions. Static checks cover the
+  pinned version, metadata, license, settings, bindings, and wrapper. A real
+  Micro session in a detached tmux socket with a temporary `HOME` asserts that
+  `F2` and `Ctrl+B` open and close the tree without leaving focus there, and
+  that `~/.config/micro` is untouched.
+
+## Verification
+
+```sh
+jq empty config/settings.json config/bindings.json
+bash tests/smoke/test_filemanager.sh
+bash -n tests/smoke/test_filemanager.sh
+git diff --check
+```
+
+- `bash tests/smoke/test_filemanager.sh`: 31 passed, 0 failed.
+- `jq empty config/settings.json config/bindings.json` exit 0.
+- `git diff --check` exit 0.
+- Merge commit `b13a408` on `main`; `git merge-base --is-ancestor b13a408
+  origin/main` exit 0.
