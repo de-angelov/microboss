@@ -11,5 +11,7 @@
     "paste": true,
     "smartpaste": true,
     "clipboard": "terminal",
-    "scrollspeed": 2
+    "scrollspeed": 2,
+    "filemanager.showdotfiles": false,
+    "filemanager.showignored": false
 }
