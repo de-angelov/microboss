@@ -68,13 +68,49 @@ shell error.
 The launcher does not create directories, install plugins, or modify the user's
 environment; those are installer and `doctor` responsibilities.
 
+## Installer
+
+`scripts/install.sh` installs the isolated configuration, the launcher, and the
+pinned language-server toolchain. It never reads or writes `~/.config/micro`.
+
+| Option | Effect |
+| --- | --- |
+| (none) | Copy `config/` to `$MICROBOSS_CONFIG` (`${XDG_CONFIG_HOME:-$HOME/.config}/microboss`). |
+| `--dev` | Symlink `$MICROBOSS_CONFIG` to the repository's `config/` so edits are live. |
+| `--no-tools` | Install only the config and launcher; do not run `npm ci`. |
+| `--prefix DIR` | Write the launcher to `DIR/microboss` instead of `$HOME/.local/bin/microboss`. |
+| `--force` | Back up and replace managed files that differ from the repository. |
+
+The installer uses the same `MICROBOSS_CONFIG`, `MICROBOSS_DATA`, and
+`MICROBOSS_CACHE` overrides as the launcher, so tests can install into a
+temporary home. It copies `tools/package.json` and `tools/package-lock.json`
+into `$MICROBOSS_DATA/tools` and runs `npm ci --prefix` against that directory,
+which guarantees the pinned server versions.
+
+The install is repeatable:
+
+- identical files are left untouched, and each run prints a summary of what was
+  installed, replaced, skipped, or left unchanged;
+- re-running does not duplicate plugin directories or append anything to the
+  configuration;
+- an existing file that differs from the repository is listed as a conflict and
+  the installer exits without changing anything unless `--force` is given;
+- `--force` moves the old file (or the old config target, including a `--dev`
+  symlink) into `$MICROBOSS_CACHE/backups/<timestamp>/` before replacing it;
+- the toolchain is reinstalled only when its manifest, lockfile, or installation
+  marker differs from the pinned source.
+
 ## Verification
 
 ```sh
 bash -n bin/microboss
+bash -n scripts/install.sh
 bash tests/smoke/test_launcher.sh
+bash tests/smoke/test_install.sh
 bash tests/smoke/test_fzf.sh
 ```
 
-The smoke test runs the launcher with a temporary `HOME` and a fake `micro`, and
-asserts that `~/.config/micro` is neither created nor modified.
+The smoke tests use a temporary `HOME`, and fake `micro`, `node`, and `npm`
+binaries, and assert that `~/.config/micro` is neither created nor modified, that
+repeated installs are idempotent, and that `--force` creates backups before
+replacing a changed file.
