@@ -1,0 +1,31 @@
+// FunScript fixture: JSX components, typed props, and interpolated strings.
+// TODO: keep this file in sync with the language examples.
+
+import { Console } from "effect"
+
+export schema WidgetProps = {
+  title: String
+  initialCount: Number
+  variant: String
+}
+
+ts {
+  export const noop = (value: any) => value
+}
+
+export renderLabel = (props: WidgetProps) =>
+  match props.variant
+    | "primary" => "widget-card variant-${props.variant}"
+    | _ => "widget-card"
+
+export Widget = (props: WidgetProps) =>
+  <div className={renderLabel(props)}>
+    <h3>{props.title}</h3>
+    <span className="count">Count: {props.initialCount}</span>
+    <button onClick={() => Console.log("clicked")}>
+      Increment
+    </button>
+  </div>
+
+export main =
+  Widget({ title: "Counter", initialCount: 0, variant: "primary" })
