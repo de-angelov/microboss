@@ -4,6 +4,42 @@ Completed work history. Normal orchestrator prompts do not load this file.
 
 ## Done
 
+### Idempotent installer
+
+Task ID: INSTALL-01
+Owner: Dev Agent 1
+Branch: agent/1/install-01
+Status: Done
+Completed: 2026-11-02
+Category: AFK
+
+## Result
+
+- Added `scripts/install.sh`, a POSIX-sh installer that copies the isolated
+  config, links the launcher, and installs the pinned toolchain with
+  `npm ci --prefix`.
+- Implemented `--dev`, `--no-tools`, `--prefix`, and `--force`; re-runs are
+  idempotent and print a new/replaced/unchanged summary.
+- Conflicting existing files abort the install with a file list and a `--force`
+  hint. `--force` backs up each replaced file under
+  `$MICROBOSS_CACHE/backups/<timestamp>/`.
+- `tests/smoke/test_install.sh` covers default install, re-run, `--no-tools`,
+  `--prefix`, `--dev`, `--force`, backups, and `~/.config/micro` isolation with
+  fake `micro`, `node`, and `npm`.
+- `docs/architecture.md` documents the installer options and repeatability.
+
+## Verification
+
+```sh
+bash -n scripts/install.sh
+bash tests/smoke/test_install.sh
+```
+
+- `bash -n scripts/install.sh` exit 0.
+- `bash tests/smoke/test_install.sh`: 58 passed, 0 failed.
+- Squash commit `0fd87f3` on `main`; `git merge-base --is-ancestor 0fd87f3
+  origin/main` exit 0.
+
 ### Pinned language-server toolchain
 
 Task ID: TOOLS-01
