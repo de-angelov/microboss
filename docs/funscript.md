@@ -53,9 +53,20 @@ funscript-lsp: FunScript executable not found: looked in ./node_modules/.bin/fun
 
 ## Micro wiring
 
-This page documents the launcher only. Wiring it into Micro's `lsp` plugin,
-`settings.json`, and the per-project dispatcher is a follow-up task; the current
-microboss configuration does not start the FunScript server automatically.
+Microboss configures the `funscript` filetype to start `funscript-lsp`, the
+adapter in `scripts/funscript-lsp.sh`. The `microboss` launcher adds its
+installation's `scripts/` directory to `PATH`, so the adapter works when Micro
+starts from a project directory. Both `.fun` and `.funx` are detected as the
+Micro filetype `funscript`; the LSP plugin sends `funscript` as the language ID
+for both, keeping them separate from the TypeScript route.
+
+Install FunScript in the project or globally as described above, then open a
+`.fun` or `.funx` file with `microboss`. To verify the wiring, start Micro from
+the project root and inspect its LSP log for `Starting server funscript`. The
+adapter's missing-server error names the searched locations and gives the
+project-local and global installation options. If launching Micro directly
+instead of through `microboss`, put the installation's `scripts/` directory on
+`PATH` so Micro can find `funscript-lsp`.
 
 ## Verification
 

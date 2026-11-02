@@ -53,6 +53,14 @@ MICROBOSS_DATA=${MICROBOSS_DATA:-${XDG_DATA_HOME:-$HOME/.local/share}/microboss}
 MICROBOSS_CACHE=${MICROBOSS_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/microboss}
 export MICROBOSS_CONFIG MICROBOSS_DATA MICROBOSS_CACHE
 
+# Expose microboss adapters to language-server plugins. Their paths are
+# installation-relative, while Micro starts servers from the project directory.
+MICROBOSS_SCRIPTS=$MICROBOSS_ROOT/scripts
+case ":${PATH:-}:" in
+    *":$MICROBOSS_SCRIPTS:"*) ;;
+    *) PATH=$MICROBOSS_SCRIPTS${PATH:+:$PATH}; export PATH ;;
+esac
+
 # Put the pinned toolchain first on PATH when it is installed, so language
 # servers and other tools are found before global ones. Skip the entry when it
 # is already on PATH, which keeps repeated launches from growing PATH.
