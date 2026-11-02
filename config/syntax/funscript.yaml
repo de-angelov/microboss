@@ -1,0 +1,49 @@
+filetype: funscript
+
+detect:
+    filename: "\\.funx?$"
+
+rules:
+    # Declarations and module syntax
+    - preproc: "\\b(import|export|from|as|type|ts|js)\\b"
+    - special: "\\b(schema|service|error)\\b"
+
+    # Control flow and effects
+    - statement: "\\b(match|when|effect|mut|and|or|not)\\b"
+
+    # Literals and placeholders
+    - constant.bool: "\\b(true|false)\\b"
+    - constant.number: "\\b([0-9]+(\\.[0-9]+)?|0x[0-9a-fA-F]+)\\b"
+    - special: "\\?\\?\\?|\\.\\.\\."
+
+    # Types, constructors, and Effect modules use UpperCamelCase
+    - type: "\\b[A-Z][A-Za-z0-9_]*\\b"
+
+    # Operators: pipeline, function arrow, effect bind, equality, math
+    - symbol.operator: "\\|>|=>|<-|#=|#!|@=|@!|==|!=|<=|>=|\\*\\*|[-+*/%<>=]"
+
+    # Punctuation
+    - symbol.brackets: "[(){}\\[\\]]"
+    - symbol: "[.,:;|]"
+
+    - constant.string:
+        start: "\""
+        end: "\""
+        skip: "\\\\."
+        rules:
+            - constant.specialChar: "\\\\."
+            - special: "\\{[^{}]*\\}"
+
+    # Raw TypeScript escape hatch
+    - constant.string:
+        start: "`"
+        end: "`"
+        skip: "\\\\."
+        rules:
+            - constant.specialChar: "\\\\."
+
+    - comment:
+        start: "//"
+        end: "$"
+        rules:
+            - todo: "(TODO|FIXME|XXX):?"
