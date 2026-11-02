@@ -1,0 +1,4 @@
+#!/bin/sh
+# PATH entry used by Micro's LSP configuration.
+SCRIPT_DIR=$(CDPATH= cd -P "$(dirname "$0")" 2>/dev/null && pwd) || exit 1
+exec "$SCRIPT_DIR/funscript-lsp.sh" "$@"

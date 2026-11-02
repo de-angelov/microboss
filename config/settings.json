@@ -13,5 +13,6 @@
     "clipboard": "terminal",
     "scrollspeed": 2,
     "filemanager.showdotfiles": false,
-    "filemanager.showignored": false
+    "filemanager.showignored": false,
+    "lsp.server": "funscript=funscript-lsp"
 }
