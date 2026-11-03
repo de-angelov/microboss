@@ -1,1 +1,1 @@
-export smoke = funscriptLspSmokeMissingSymbol
+let smoke = 1

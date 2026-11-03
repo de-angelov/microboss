@@ -1,1 +1,1 @@
-export Smoke = () => <div>{funscriptLspSmokeMissingSymbol}</div>
+let smoke = 1

@@ -39,15 +39,16 @@ export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_DATA_HOME="$HOME/.local/share"
 mkdir -p "$HOME" "$TMP_ROOT/project/node_modules/.bin"
+PATH="$REPO_ROOT/scripts:$PATH"
+export PATH
 cp -a "$CONFIG" "$TMP_ROOT/config"
 ln -s "$FUNSCRIPT_BIN" "$TMP_ROOT/project/node_modules/.bin/funscript"
 
 wait_for_diagnostic() {
     local i=0
     while [ "$i" -lt 100 ]; do
-        # The marker is present in the source once; a second occurrence in the
-        # rendered pane proves Micro surfaced the server diagnostic.
-        if [ "$(tmux -L "$SOCKET" capture-pane -p -t "$SESSION" 2>/dev/null | grep -ci 'funscriptLspSmokeMissingSymbol')" -ge 2 ]; then
+        # The invalid declaration produces a diagnostic shown at the cursor.
+        if [ "$(tmux -L "$SOCKET" capture-pane -p -t "$SESSION" 2>/dev/null | grep -ci "FunScript has no .let.")" -ge 1 ]; then
             return 0
         fi
         tmux -L "$SOCKET" has-session -t "$SESSION" >/dev/null 2>&1 || return 1
@@ -64,13 +65,14 @@ run_fixture() {
     cp "$source" "$target"
 
     tmux -L "$SOCKET" new-session -d -s "$SESSION" -x 120 -y 40 \
-        "cd '$TMP_ROOT/project' && HOME='$HOME' XDG_CONFIG_HOME='$XDG_CONFIG_HOME' XDG_CACHE_HOME='$XDG_CACHE_HOME' XDG_DATA_HOME='$XDG_DATA_HOME' '$MICRO_BIN' -config-dir '$TMP_ROOT/config' '$target'"
+        "cd '$TMP_ROOT/project' && HOME='$HOME' XDG_CONFIG_HOME='$XDG_CONFIG_HOME' XDG_CACHE_HOME='$XDG_CACHE_HOME' XDG_DATA_HOME='$XDG_DATA_HOME' '$MICRO_BIN' -debug -config-dir '$TMP_ROOT/config' '$target'"
 
     if wait_for_diagnostic; then
         printf 'ok - Micro received FunScript diagnostics for .%s\n' "$ext"
     else
         printf 'not ok - Micro received FunScript diagnostics for .%s\n' "$ext" >&2
         tmux -L "$SOCKET" capture-pane -p -t "$SESSION" >&2 2>/dev/null || true
+        cat "$TMP_ROOT/project/log.txt" >&2 2>/dev/null || true
         tmux -L "$SOCKET" kill-session -t "$SESSION" >/dev/null 2>&1 || true
         return 1
     fi
