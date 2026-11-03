@@ -1,0 +1,1 @@
+let smoke = 1
