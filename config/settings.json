@@ -8,7 +8,7 @@
     "backupdir": "~/.cache/microboss",
     "autoindent": true,
     "rmtrailingws": true,
-    "paste": true,
+    "paste": false,
     "smartpaste": true,
     "clipboard": "terminal",
     "scrollspeed": 2,
