@@ -406,12 +406,17 @@ function hoverAction(bp)
 	end
 end
 
-function hoverActionResponse(buf, data)
+function hoverActionResponse(bp, data)
 	if data.result and data.result.contents ~= nil and data.result.contents ~= "" then
+		local text = nil
 		if data.result.contents.value then
-			micro.InfoBar():Message(data.result.contents.value)
+			text = data.result.contents.value
 		elseif #data.result.contents > 0 then
-			micro.InfoBar():Message(data.result.contents[1].value)
+			text = data.result.contents[1].value or data.result.contents[1]
+		end
+		if text and text ~= "" then
+			local hoverBuf = buffer.NewBuffer(text, "Hover")
+			bp:HSplitBuf(hoverBuf)
 		end
 	end
 end

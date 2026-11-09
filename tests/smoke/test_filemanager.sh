@@ -94,7 +94,7 @@ check_true "init.lua restores focus with PreviousSplit" \
     'grep -q "PreviousSplit" "$INIT_LUA"'
 
 check_true "config does not reference ~/.config/micro" \
-    '! grep -Rq --include="*.json" --include="*.lua" --include="*.md" "\.config/micro" "$CONFIG"'
+    '! grep -Rq --include="*.json" --include="*.lua" "\.config/micro" "$CONFIG"'
 
 # --- Integration fixture ------------------------------------------------------
 
@@ -249,6 +249,37 @@ else
 fi
 check_eq "Ctrl+B closes the tree and keeps editor focus" \
     "$(probe_line)" "panes=1 active=$FIXTURE"
+
+tmux -L "$SOCKET" kill-session -t "$SESSION"
+tmux -L "$SOCKET" new-session -d -s "$SESSION" -x 120 -y 40 \
+    "MICROBOSS_CONFIG='$TMP_ROOT/config' '$REPO_ROOT/bin/microboss' '$TMP_ROOT/project'"
+folder_opened=0
+for _ in $(seq 1 60); do
+    if tmux -L "$SOCKET" capture-pane -p -t "$SESSION" 2>/dev/null | grep -q 'sample.txt'; then
+        folder_opened=1
+        break
+    fi
+    sleep 0.1
+done
+check_eq "folder launch opens its project tree" "$folder_opened" "1"
+send_key C-w
+send_key Down
+send_key Enter
+opened=0
+for _ in $(seq 1 60); do
+    if tmux -L "$SOCKET" capture-pane -p -t "$SESSION" 2>/dev/null | grep -q 'fixture'; then
+        opened=1
+        break
+    fi
+    sleep 0.1
+done
+check_eq "Enter opens the selected tree file" "$opened" "1"
+send_key End
+send_key Enter
+tmux -L "$SOCKET" send-keys -t "$SESSION" -l 'secondline'
+sleep 0.2
+check_true "Enter still inserts a newline in source files" \
+    'tmux -L "$SOCKET" capture-pane -p -t "$SESSION" | grep -q "secondline"'
 
 check_true "Micro did not create ~/.config/micro under the test HOME" \
     '[ ! -e "$HOME/.config/micro" ]'

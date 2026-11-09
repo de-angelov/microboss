@@ -81,6 +81,29 @@ run_fixture() {
 
 run_fixture fun || exit 1
 run_fixture funx || exit 1
+
+# Hover should retain multiple lines in a readable split instead of flattening
+# Markdown into the info bar. Exercise the real FunScript server and keybinding.
+printf 'export greet = (name: String) => "Hello, {name}!"\n' > "$TMP_ROOT/project/hover.fun"
+tmux -L "$SOCKET" new-session -d -s "$SESSION" -x 120 -y 40 \
+    "cd '$TMP_ROOT/project' && HOME='$HOME' '$MICRO_BIN' -config-dir '$TMP_ROOT/config' +1:9 '$TMP_ROOT/project/hover.fun'"
+sleep 2
+tmux -L "$SOCKET" send-keys -t "$SESSION" M-k
+hover_ok=0
+for _ in $(seq 1 100); do
+    if tmux -L "$SOCKET" capture-pane -p -t "$SESSION" | grep -q 'greet: (name: string) => string'; then
+        hover_ok=1
+        break
+    fi
+    sleep 0.1
+done
+if [ "$hover_ok" -ne 1 ]; then
+    printf 'not ok - Micro displays multiline symbol hover\n' >&2
+    tmux -L "$SOCKET" capture-pane -p -t "$SESSION" >&2 || true
+    exit 1
+fi
+printf 'ok - Micro displays multiline symbol hover\n'
+tmux -L "$SOCKET" kill-session -t "$SESSION" >/dev/null 2>&1 || true
 [ ! -e "$HOME/.config/micro" ] || {
     printf 'Micro unexpectedly created ~/.config/micro under the test HOME\n' >&2
     exit 1

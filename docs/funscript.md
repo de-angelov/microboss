@@ -60,6 +60,14 @@ starts from a project directory. Both `.fun` and `.funx` are detected as the
 Micro filetype `funscript`; the LSP plugin sends `funscript` as the language ID
 for both, keeping them separate from the TypeScript route.
 
+Press `Alt+K` on a symbol to open hover information in a split. Close that
+split with `Ctrl+Q` to return to the source file.
+
+Run `microboss path/to/project` to open a folder with its file tree. Use
+`Ctrl+W` to switch panes, arrow keys to navigate, `Enter` or `Tab` to open a file or
+enter a directory, and `F2` to toggle the tree. `Ctrl+P` opens fuzzy file
+search when `fzf` is installed.
+
 Install FunScript in the project or globally as described above, then open a
 `.fun` or `.funx` file with `microboss`. To verify the wiring, start Micro from
 the project root and inspect its LSP log for `Starting server funscript`. The

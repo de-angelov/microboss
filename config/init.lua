@@ -9,6 +9,7 @@
 
 local micro = import("micro")
 local config = import("micro/config")
+local os = import("os")
 
 function toggle_softwrap(bp)
     local enabled = bp.Buf.Settings["softwrap"]
@@ -35,8 +36,20 @@ function toggle_filemanager()
     end
 end
 
+function smart_enter(bp)
+    if bp.Buf.Path == "filemanager" then
+        filemanager.try_open_at_cursor()
+        return true
+    end
+    return bp:InsertNewline()
+end
+
 -- postinit runs after every plugin's init(), so this replaces filemanager's
 -- own `tree` command without patching the vendored plugin.
 function postinit()
     config.MakeCommand("tree", toggle_filemanager, config.NoComplete)
+    local openTree = os.Getenv("MICROBOSS_OPEN_TREE")
+    if openTree == "1" then
+        toggle_filemanager()
+    end
 end

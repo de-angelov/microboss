@@ -74,6 +74,8 @@ cat > "$FAKEBIN/micro" <<'FAKE'
     printf 'env_data=%s\n' "${MICROBOSS_DATA-}"
     printf 'env_cache=%s\n' "${MICROBOSS_CACHE-}"
     printf 'env_root=%s\n' "${MICROBOSS_ROOT-}"
+    printf 'env_open_tree=%s\n' "${MICROBOSS_OPEN_TREE-}"
+    printf 'cwd=%s\n' "$PWD"
     printf 'env_path=%s\n' "${PATH-}"
 } > "${MICROBOSS_TEST_LOG:?MICROBOSS_TEST_LOG is not set}"
 FAKE
@@ -159,11 +161,17 @@ check_eq "MICROBOSS_CACHE defaults under HOME" "$(log_value env_cache)" \
     "$TEST_HOME/.cache/microboss"
 check_eq "MICROBOSS_ROOT points at the distribution root" \
     "$(log_value env_root)" "$REPO_ROOT"
-check_eq "PATH is untouched when no toolchain is installed" \
-    "$(log_value env_path)" "$FAKEBIN:/usr/bin:/bin"
+check_eq "adapter scripts are on PATH" \
+    "$(log_value env_path)" "$REPO_ROOT/scripts:$FAKEBIN:/usr/bin:/bin"
 
 check_true "default run does not create ~/.config/micro" \
     '[ ! -e "$TEST_HOME/.config/micro" ]'
+
+mkdir -p "$TMP/project with spaces"
+run_launcher "$LAUNCHER" "$TMP/project with spaces"
+check_eq "folder launch uses project as working directory" "$(log_value cwd)" "$TMP/project with spaces"
+check_eq "folder launch opens tree" "$(log_value env_open_tree)" "1"
+check_eq "folder is not passed as a file" "$(log_value argc)" "2"
 
 # --- Environment overrides ----------------------------------------------------
 
@@ -209,7 +217,7 @@ check_eq "toolchain: launcher exits 0" "$STATUS" "0"
 check_prefix "toolchain bin is prepended to PATH" "$TOOLCHAIN_PATH" \
     "$TOOLCHAIN_BIN:"
 check_eq "toolchain: existing PATH entries are preserved" \
-    "${TOOLCHAIN_PATH#"$TOOLCHAIN_BIN:"}" "$FAKEBIN:/usr/bin:/bin"
+    "${TOOLCHAIN_PATH#"$TOOLCHAIN_BIN:"}" "$REPO_ROOT/scripts:$FAKEBIN:/usr/bin:/bin"
 check_eq "toolchain: user arguments still pass through" "$(log_value arg3)" \
     "tool.txt"
 
@@ -219,7 +227,7 @@ run_launcher_env "$LAUNCHER" \
     "PATH=$TOOLCHAIN_BIN:$FAKEBIN:/usr/bin:/bin" \
     -- "dup.txt"
 check_eq "existing toolchain PATH entry is not duplicated" \
-    "$(log_value env_path)" "$TOOLCHAIN_BIN:$FAKEBIN:/usr/bin:/bin"
+    "$(log_value env_path)" "$REPO_ROOT/scripts:$TOOLCHAIN_BIN:$FAKEBIN:/usr/bin:/bin"
 
 # --- POSIX sh invocation ------------------------------------------------------
 

@@ -1,5 +1,6 @@
 {
     "F2": "command:tree",
+    "Enter": "lua:initlua.smart_enter",
     "CtrlB": "command:tree",
     "CtrlP": "command:fzf",
     "CtrlE": "CommandMode",

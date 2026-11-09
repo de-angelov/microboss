@@ -93,4 +93,13 @@ if ! command -v micro >/dev/null 2>&1; then
     die "micro not found on PATH. Install Micro $MICRO_MIN_VERSION or newer (https://micro-editor.github.io/) and try again." 127
 fi
 
+# A single directory opens a project rooted there; other arguments retain
+# Micro's normal file and option handling.
+if [ "$#" -eq 1 ] && [ -d "$1" ]; then
+    CDPATH= cd -- "$1" || die "cannot open directory: $1"
+    MICROBOSS_OPEN_TREE=1
+    export MICROBOSS_OPEN_TREE
+    set --
+fi
+
 exec micro -config-dir "$MICROBOSS_CONFIG" "$@"
